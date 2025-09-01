@@ -1,4 +1,4 @@
-## Q.1. What is the difference between Hashmap and HashTable and ConcurrentHashMap?
+## Q.1: What is the difference between Hashmap and HashTable and ConcurrentHashMap?
 Good question — this one comes up a lot in interviews. Here’s a crisp, **interview-ready comparison**:
 
 ---
@@ -50,7 +50,7 @@ concurrentMap.put(1, "One");
 
 ---
 
-## Q.2. Draw an **internal working diagram of ConcurrentHashMap locking** (bucket-level locking vs Hashtable global lock)?
+## Q.2: Draw an **internal working diagram of ConcurrentHashMap locking** (bucket-level locking vs Hashtable global lock)?
 
 ### 🔑 Differences: **HashMap vs Hashtable vs ConcurrentHashMap**
 
@@ -103,7 +103,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 
 ---
 
-## Q.3. How does Garbage Collection work in JVM?
+## Q.3: How does Garbage Collection work in JVM?
 
 **Garbage Collection in JVM**
 
@@ -119,7 +119,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 **Interview line:**
 “Garbage Collection in Java automatically manages memory by removing objects no longer referenced. It mainly works with the Young and Old generations using algorithms like mark-sweep and compaction. This reduces memory leaks and makes Java memory-safe without requiring manual deallocation.”
 
-## Q.3. Explain volatile and synchronized in multithreading?
+## Q.4: Explain volatile and synchronized in multithreading?
 
 ### **1. `volatile`**
 
@@ -151,7 +151,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 
 
 
-## Q.4. Deep copy vs Shallow copy?
+## Q.5: Deep copy vs Shallow copy?
 
 
 ### **Shallow Copy**
@@ -183,7 +183,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 
 ---
 
-## Q.5. How does the Java memory model work (Heap, Stack, Metaspace)?
+## Q.6: How does the Java memory model work (Heap, Stack, Metaspace)?
 Here’s a clear **interview-friendly explanation** of the **Java Memory Model (JMM):**
 
 ---
@@ -224,7 +224,7 @@ Here’s a clear **interview-friendly explanation** of the **Java Memory Model (
 ---
 
 
-## Q.6. What happens if two keys have the same hashcode?
+## Q.7: What happens if two keys have the same hashcode?
 In Java, if two keys have the same **hashCode**, the following happens inside a `HashMap` (or similar hash-based collections):
 
 1. **Bucket selection:** Both keys will map to the same bucket (index) in the hash table.
@@ -242,7 +242,7 @@ In Java, if two keys have the same **hashCode**, the following happens inside a 
 
 
 
-## Q.7. Difference between synchronized block and ConcurrentHashMap?
+## Q.8: Difference between synchronized block and ConcurrentHashMap?
 Here’s the difference between a **synchronized block** and a **ConcurrentHashMap**:
 
 ---
@@ -281,7 +281,7 @@ Here’s the difference between a **synchronized block** and a **ConcurrentHashM
 
 ---
 
-## Q.8. Why ConcurrentHashMap are Much faster than synchronized blocks under high concurrency?
+## Q.9: Why ConcurrentHashMap are Much faster than synchronized blocks under high concurrency?
 ConcurrentHashMap is much faster than synchronized blocks under high concurrency because of **how locking is handled**:
 
 ---
@@ -328,7 +328,7 @@ ConcurrentHashMap is much faster than synchronized blocks under high concurrency
 
 
 
-## Q.9. How does Garbage Collection work in JVM?
+## Q.10: How does Garbage Collection work in JVM?
 The core process of JVM Garbage Collection typically involves the following phases:
 
 **Marking Phase:**
@@ -341,7 +341,7 @@ After marking, the garbage collector scans the heap and identifies the memory oc
 
 
 
-## Q.10 Explain the Java Memory Model briefly?
+## Q.11: Explain the Java Memory Model briefly?
 The **Java Memory Model (JMM)** is a specification that defines how threads interact with memory in a Java Virtual Machine (JVM), particularly in multithreaded environments. It establishes rules and guarantees regarding the visibility, ordering, and atomicity of variable access, ensuring consistent behavior of concurrent programs across different hardware and JVM implementations.
 
 Key aspects of the JMM include:
@@ -354,7 +354,7 @@ Key aspects of the JMM include:
 The JMM is fundamental for developing robust and reliable concurrent applications in Java, providing the necessary framework for thread safety and preventing issues like data races and inconsistent state. Developers utilize synchronization constructs like `synchronized` blocks, `volatile` variables, and concurrent utility classes (e.g., from `java.util.concurrent`) to adhere to the JMM's guarantees and ensure correct program behavior.
 
 
-## Q.11 What is Future in java? What are some more related concepts to Future in java?
+## Q.12: What is Future in java? What are some more related concepts to Future in java?
  In Java, a `Future` is an object that represents the result of an asynchronous computation. It allows you to carry out a computation in the background and obtain its result without waiting for it to complete, or check if the computation is still running.
 
 The `Future` interface in Java provides methods such as:
@@ -375,7 +375,7 @@ Related concepts to Future in Java include:
 
 ---
 
-## Q.12 Can you teach me about Java 8 features (Lambdas, Streams, Functional Interfaces)?
+## Q.13: Can you teach me about Java 8 features (Lambdas, Streams, Functional Interfaces)?
 
 ### Lambdas:
 
@@ -462,15 +462,286 @@ Here are some built-in Java 8 functional interfaces:
 
 These functional interfaces can be used in various scenarios such as handling callbacks or processing data with lambda expressions. The ability to create custom functional interfaces allows developers to design their own abstractions for specific use cases, making it easier to write concise and flexible code using Java 8's lambda expressions.
 
-## Q.13 
+## Q.14: What is future and completablefuture in java?
+Here’s the interview-style explanation:
+
+---
+
+### **1. `Future` in Java**
+
+* Introduced in **Java 5** (as part of `java.util.concurrent`).
+* Represents the result of an asynchronous computation.
+* You submit a task to an `ExecutorService`, and it immediately returns a `Future` object, which acts as a placeholder for the result.
+
+**Limitations of Future:**
+
+1. **Blocking get()** – you have to call `future.get()` to wait for the result, which blocks the thread.
+2. **No callbacks** – you cannot attach actions to run when the task completes.
+3. **No chaining** – you cannot combine results of multiple futures easily.
+4. **No manual completion** – only the executor sets the result.
+
+**Example with Future:**
+
+```java
+import java.util.concurrent.*;
+
+public class FutureExample {
+    public static void main(String[] args) throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Integer> future = executor.submit(() -> {
+            Thread.sleep(1000);
+            return 42;
+        });
+
+        System.out.println("Doing something else...");
+        Integer result = future.get(); // blocks
+        System.out.println("Result: " + result);
+        executor.shutdown();
+    }
+}
+```
+
+---
+
+### **2. `CompletableFuture` in Java**
+
+* Introduced in **Java 8**.
+* An enhanced version of `Future`.
+* Supports **non-blocking**, **callback-based**, and **chaining** style of programming.
+* Implements both `Future` and `CompletionStage`.
+
+**Key features:**
+
+1. **Asynchronous execution** – run tasks with `supplyAsync()` or `runAsync()`.
+2. **Non-blocking callbacks** – attach `thenApply()`, `thenAccept()`, `thenRun()`, etc.
+3. **Chaining** – chain multiple async computations together.
+4. **Combining Futures** – `thenCombine()`, `allOf()`, `anyOf()` for parallel execution.
+5. **Manual completion** – you can complete it using `complete()` method.
+
+**Example with CompletableFuture:**
+
+```java
+import java.util.concurrent.*;
+
+public class CompletableFutureExample {
+    public static void main(String[] args) {
+        CompletableFuture<Integer> future = CompletableFuture.supplyAsync(() -> {
+            try { Thread.sleep(1000); } catch (InterruptedException e) {}
+            return 42;
+        });
+
+        future.thenApply(result -> result * 2)      // transforms the result
+              .thenAccept(result -> System.out.println("Result: " + result));
+
+        System.out.println("Doing something else...");
+        try { Thread.sleep(2000); } catch (InterruptedException e) {}
+    }
+}
+```
+
+**Output (non-blocking):**
+
+```
+Doing something else...
+Result: 84
+```
+
+---
+
+### **Summary (Interview Answer)**
+
+* **Future** → Represents the result of an async computation but only supports blocking retrieval (`get()`). No chaining, no callbacks.
+* **CompletableFuture** → A more powerful, non-blocking, callback-based future with chaining, composition, and manual completion support.
+
+---
 
 
-## Q.14 
+## Q.15: What is Tomcat?
+
+### **What is Tomcat?**
+
+Apache Tomcat is a **web server + servlet container**.
+It is the default embedded server in Spring Boot.
+
+* **Web server** → Handles HTTP requests and responses (like Apache HTTP Server, Nginx).
+* **Servlet container** → Provides the runtime environment for Java Servlets and JSPs (Java code that runs inside web requests).
+
+Tomcat does **both**.
+
+---
+
+### **How it fits in Spring Boot?**
+
+* When you run a Spring Boot app, it **starts an embedded Tomcat server** inside your application (no need to install separately).
+* That’s why your app runs at `http://localhost:8080`.
+* Tomcat handles incoming requests, and then Spring passes them to your controllers.
+
+---
+
+### **Key point**:
+
+Tomcat = **middleman between browser and your Java code**.
+
+* It speaks HTTP.
+* It knows how to run Java Servlets.
+* It makes sure every request-response cycle works smoothly.
+
+---
 
 
-## Q.15 
+## Q.16: What is Abstraction? How do you implement it in your project?
+**Abstraction in Java**:
+Abstraction is the process of hiding implementation details and showing only the essential features of an object. It helps reduce complexity and increase reusability by focusing on *what an object does* rather than *how it does it*.
+
+In Java, **abstraction** can be achieved in two ways:
+
+1. **Abstract classes** (partial abstraction).
+
+   * Can have abstract methods (without body) and concrete methods (with implementation).
+   * Used when you want to enforce some common behavior but still allow flexibility.
+2. **Interfaces** (full abstraction, until Java 8).
+
+   * Define only method signatures, and the implementing classes provide concrete logic.
+   * From Java 8 onwards, interfaces can have `default` and `static` methods too.
+
+---
+
+### Example of Abstraction:
+
+```java
+// Abstract class example
+abstract class Payment {
+    abstract void makePayment(double amount);
+
+    void generateReceipt() {
+        System.out.println("Receipt generated");
+    }
+}
+
+class CreditCardPayment extends Payment {
+    @Override
+    void makePayment(double amount) {
+        System.out.println("Paid " + amount + " using Credit Card");
+    }
+}
+
+class UpiPayment extends Payment {
+    @Override
+    void makePayment(double amount) {
+        System.out.println("Paid " + amount + " using UPI");
+    }
+}
+```
+
+Usage:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Payment payment = new CreditCardPayment();
+        payment.makePayment(500.0);   // Hides implementation, just calls abstracted method
+        payment.generateReceipt();
+
+        payment = new UpiPayment();
+        payment.makePayment(200.0);
+    }
+}
+```
+
+---
+
+### How I would explain in an interview ("How do you implement it in your project?"):
+
+👉 *"In my project, we used abstraction mainly to design service layers. For example, in a payment module, we defined an interface `PaymentService` that had methods like `processPayment()`, and then we had multiple implementations like `CreditCardService`, `UpiService`, etc. The calling code only depended on the abstraction (`PaymentService`) and not on the concrete classes. This allowed us to easily extend the system in the future without changing the existing code."*
 
 
-## Q.16 
+## Q.17: How do you create a REST API? Write a sample GET and POST API.
+Here’s a simple **Spring Boot REST API example** showing both **GET** and **POST**:
+
+```java
+import org.springframework.web.bind.annotation.*;
+
+// Step 1: Mark this class as a REST controller
+@RestController
+@RequestMapping("/api/users")  // Base path
+public class UserController {
+
+    // Sample GET API
+    @GetMapping("/{id}")
+    public String getUser(@PathVariable int id) {
+        return "Fetching user with ID: " + id;
+    }
+
+    // Sample POST API
+    @PostMapping
+    public String createUser(@RequestBody User user) {
+        return "User created with name: " + user.getName();
+    }
+}
+
+// Simple DTO class
+class User {
+    private String name;
+    private int age;
+
+    // getters & setters
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+}
+```
+
+---
+
+### 🔑 Key Points
+
+* `@RestController` → Tells Spring this class exposes REST APIs (returns JSON by default).
+* `@RequestMapping("/api/users")` → Sets the base URL.
+* `@GetMapping("/{id}")` → Example: `GET /api/users/5` → returns user 5.
+* `@PostMapping` + `@RequestBody` → Accepts JSON body, deserializes into `User` object.
+  Example request:
+
+  ```json
+  POST /api/users
+  {
+    "name": "Aditya",
+    "age": 25
+  }
+  ```
+
+This is the minimal working REST API.
+
+
+## Q.18: Your Java application is running slow in production. What steps would you take to investigate?
+Investigating performance issues in a Java application requires following a systematic approach to identify the root cause of the problem, optimize the code, and monitor the application's behavior. Here are some steps you can follow:
+
+1. **Profiling**: Start by profiling your application using tools like VisualVM, JProfiler, or YourKit. These tools can help you understand where your application spends most of its time during execution, identify bottlenecks, and pinpoint slow-performing methods that need optimization.
+
+2. **Memory leaks**: Check for memory leaks by analyzing the heap usage over time. Tools such as VisualVM or MAT (Memory Analyzer Tool) can be used to identify objects that are consuming excessive memory and causing performance issues.
+
+3. **Threading**: Investigate thread contention, deadlocks, and thread starvation. Use profiling tools to monitor the number of threads, their CPU usage, and their blocking times. If you find any evidence of these issues, consider refactoring your code to address them or adjusting the thread pool configuration if applicable.
+
+4. **Concurrency bugs**: Check for concurrent programming errors such as race conditions, data inconsistency, or incorrect use of locks. Use debugging tools like JVisualVM or JMC (Java Mission Control) to analyze thread dumps and heap snapshots to identify potential issues.
+
+5. **Optimization**: Once you've identified bottlenecks in your application, optimize the code by using performance-focused techniques such as caching, lazy loading, or algorithm optimization. You might also consider upgrading hardware resources if necessary.
+
+6. **Monitoring and logging**: Implement proper monitoring and logging mechanisms to track the application's behavior over time. This includes using log4j, SLF4J, or other logging libraries for error reporting and performance metrics. Use these logs to analyze trends, identify patterns, and quickly respond to any new issues that arise.
+
+7. **Testing**: Make sure you have a comprehensive testing strategy in place, including unit tests, integration tests, and load tests. Regularly test your application under different conditions to ensure it continues to perform well as changes are made to address performance issues.
+
+8. **Collaboration**: Work closely with other team members, such as system administrators or DevOps engineers, to optimize the underlying infrastructure and configuration settings that might affect application performance. This includes database configurations, network settings, or hardware resources like CPU, RAM, and disk I/O.
+
+
+## Q.19:
+
+
+## Q.20:
+
+
+## Q.21:
+
+
+## Q.22:
 
 
