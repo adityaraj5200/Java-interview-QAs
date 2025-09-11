@@ -463,9 +463,6 @@ Here are some built-in Java 8 functional interfaces:
 These functional interfaces can be used in various scenarios such as handling callbacks or processing data with lambda expressions. The ability to create custom functional interfaces allows developers to design their own abstractions for specific use cases, making it easier to write concise and flexible code using Java 8's lambda expressions.
 
 ## Q.14: What is future and completablefuture in java?
-Here’s the interview-style explanation:
-
----
 
 ### **1. `Future` in Java**
 
@@ -733,15 +730,137 @@ Investigating performance issues in a Java application requires following a syst
 8. **Collaboration**: Work closely with other team members, such as system administrators or DevOps engineers, to optimize the underlying infrastructure and configuration settings that might affect application performance. This includes database configurations, network settings, or hardware resources like CPU, RAM, and disk I/O.
 
 
-## Q.19:
+## Q.19: What are some Key features of java 8?
+Here’s a concise list of **key features introduced in Java 8** (most asked in interviews):
 
 
-## Q.20:
+1. **Lambda Expressions**
+
+   * Enables writing anonymous functions in a clean, functional style.
+
+   ```java
+   List<String> list = Arrays.asList("A","B","C");
+   list.forEach(s -> System.out.println(s));
+   ```
+
+2. **Functional Interfaces**
+
+   * Interfaces with a single abstract method (SAM).
+   * Example: `Runnable`, `Callable`, `Comparator`, or custom with `@FunctionalInterface`.
+
+3. **Streams API**
+
+   * Functional-style operations on collections (map, filter, reduce).
+
+   ```java
+   List<Integer> nums = Arrays.asList(1,2,3,4);
+   nums.stream().filter(n -> n%2==0).forEach(System.out::println);
+   ```
+
+4. **Default and Static Methods in Interfaces**
+
+   * Interfaces can now have method implementations.
+
+   ```java
+   interface MyInterface {
+       default void show(){ System.out.println("Default method"); }
+       static void display(){ System.out.println("Static method"); }
+   }
+   ```
+
+5. **Method References & Constructor References**
+
+   * Shorter syntax for calling methods/constructors.
+
+   ```java
+   list.forEach(System.out::println);
+   ```
+
+6. **Optional Class**
+
+   * To avoid `NullPointerException`.
+
+   ```java
+   Optional<String> str = Optional.ofNullable(null);
+   System.out.println(str.orElse("default"));
+   ```
+
+7. **New Date and Time API (`java.time` package)**
+
+   * Modern replacement for `Date` and `Calendar`.
+
+   ```java
+   LocalDate today = LocalDate.now();
+   LocalDate tomorrow = today.plusDays(1);
+   ```
+
+8. **Nashorn JavaScript Engine**
+
+   * Execute JavaScript code inside Java applications.
+
+9. **CompletableFuture & Enhanced Concurrency**
+
+   * For better asynchronous programming compared to `Future`.
+
+10. **Collectors & Stream Enhancements**
+
+* `Collectors.toList()`, `toSet()`, `joining()`, `groupingBy()`.
+
+---
+
+✅ **Interview-Ready Summary:**
+Java 8 introduced functional programming to Java with lambda expressions, streams, and functional interfaces. It also improved interfaces with default/static methods, added `Optional` to handle nulls safely, introduced the new Date/Time API, and enhanced concurrency with `CompletableFuture`.
+
+---
+
+Do you want me to also prepare a **1-minute crisp version** (just 4–5 must-mention features) for when the interviewer expects a quick answer?
 
 
-## Q.21:
+
+## Q.20: Why are strings immutable in java?
+Strings in Java are **immutable** (cannot be changed once created). The reasons are mainly around **security, performance, and reliability**:
+
+---
+
+### 🔑 Reasons Why Strings are Immutable in Java
+
+1. **Security**
+
+   * Strings are used in sensitive operations (like file paths, database URLs, network connections, class loading).
+   * If `String` were mutable, malicious code could change the content after validation.
+   * Example: Changing a database password string after authentication would be a huge risk.
+
+2. **Caching & Performance (String Pool)**
+
+   * Java maintains a **String Pool** in the heap.
+   * If strings were mutable, two references pointing to `"Hello"` could be changed independently → breaking the pool’s guarantee of reusability.
+   * Immutability makes strings safe to cache and share.
+
+3. **Thread Safety**
+
+   * Immutable objects are inherently **thread-safe**.
+   * Multiple threads can share the same string without synchronization issues.
+
+4. **Hashcode Consistency**
+
+   * Strings are often used as **keys in HashMap/HashSet**.
+   * If a string were mutable, changing its value would change its hashcode → breaking hashing and lookups.
+   * Immutability guarantees consistent hashcode for a string.
+
+5. **Reliability in APIs**
+
+   * Many Java APIs expect strings not to change unexpectedly.
+   * Immutable design avoids unpredictable bugs.
+
+---
+
+✅ **Interview-ready one-liner:**
+Strings in Java are immutable to ensure security, enable string pool caching, guarantee thread-safety, and provide consistent behavior in collections like HashMap.
 
 
-## Q.22:
+## Q.21: 
+
+
+## Q.22: 
 
 
