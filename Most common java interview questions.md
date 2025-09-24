@@ -69,9 +69,25 @@ A curated, modular set of high‑yield Java interview questions with detailed an
 ## Core Java
 
 ### What is the JDK, JRE, and JVM?
-- JDK (Java Development Kit): Tools for development (compiler `javac`, javadoc, debuggers) plus a JRE.
-- JRE (Java Runtime Environment): Libraries and JVM needed to run Java applications; no compiler.
-- JVM (Java Virtual Machine): The engine that executes Java bytecode; provides classloading, bytecode verification, JIT compilation, and GC. Different JVM implementations may exist, but the Java language targets the JVM via bytecode.
+
+* **JVM (Java Virtual Machine):**
+  * Abstract machine that runs Java bytecode.
+  * Provides platform independence by converting bytecode into machine code (via interpreter or JIT compiler).
+  * Handles tasks like class loading, bytecode verification, memory management (heap, stack, garbage collection), and execution of code.
+  * JVM is platform-dependent (different implementations for Windows, Linux, etc.), but bytecode is platform-independent.
+
+* **JRE (Java Runtime Environment):**
+  * Provides the libraries, JVM, and supporting files required to run Java programs.
+  * Contains core class libraries (like java.lang, java.util, etc.) and other runtime components.
+  * Does **not** include development tools such as compiler (`javac`) or debugger.
+  * Suitable for users who only want to run Java applications, not develop them.
+
+* **JDK (Java Development Kit):**
+  * Complete package for Java developers.
+  * Includes JRE + development tools (like `javac`, `javadoc`, `jdb`, etc.).
+  * Provides everything needed to develop, compile, debug, and run Java applications.
+  * Comes in different editions (Standard Edition, Enterprise Edition, Micro Edition).
+
 
 ### Is Java pass-by-value or pass-by-reference?
 - Java is strictly pass-by-value. For object references, the reference itself is passed by value (i.e., a copy of the reference). You can mutate the object via the copied reference, but you cannot rebind the caller’s reference.
@@ -97,7 +113,20 @@ System.out.println(a.equals(b));   // true (structural equality)
 
 ### What is immutability? Why is `String` immutable? What is string interning?
 - Immutable objects cannot change state after construction, enabling thread-safety, caching, and safe sharing.
-- `String` is immutable for security (e.g., classloaders, URLs), caching (string pool), and thread-safety.
+
+- String is immutable because of:
+
+  * **Security:** Strings are often used in sensitive operations like database connections, file paths, and network connections. If strings were mutable, malicious code could change their values after creation, leading to security risks.
+
+  * **Caching and String Pool:** The JVM maintains a String pool to reuse string objects. Immutability ensures that once a string is created and stored in the pool, it cannot be changed. This saves memory and improves performance.
+
+  * **Thread-safety:** Since strings cannot be modified, multiple threads can share the same string instance without synchronization. This makes them inherently thread-safe.
+
+  * **Hashcode Consistency:** Strings are frequently used as keys in hash-based collections (like `HashMap`). If strings were mutable, their hashcode could change, breaking the contract of `Map` and causing retrieval issues.
+
+  * **Performance optimization:** Operations like substring, concatenation, and intern rely on immutability for correctness and efficiency.
+
+
 - String interning in Java refers to the optimization technique where the JVM stores only one copy of a given string literal in memory, regardless of how many times that exact string appears in the source code. This means that if two string literals have the same value, they will refer to the same object instance in memory.
 
 ```java
@@ -129,9 +158,22 @@ void checkout(Payment p) { p.pay(100.0); } // polymorphism
 ```
 
 ### Abstract class vs interface
-- Abstract class: Can have state, constructors, and both abstract/concrete methods. Single inheritance only.
-- Interface: Primarily behavior contracts; can have default/static methods; a class can implement multiple interfaces. No instance state (except constants).
-- Choose interface when modeling capabilities; abstract class when providing a common base with shared state or protected helpers.
+* **Abstract Class**
+
+  * Cannot be instantiated.
+  * Can have both **abstract methods** (no body) and **concrete methods** (with implementation).
+  * Can have **instance variables**, constructors, and static methods.
+  * Supports **single inheritance** (a class can extend only one abstract class).
+  * Useful when classes share a common base with some default behavior.
+
+* **Interface**
+
+  * Specifies a set of methods a class must implement.
+  * Contains only **abstract methods** (until Java 7). Since Java 8, can have **default** and **static methods**, and since Java 9, **private methods**.
+  * Cannot have instance variables (only `public static final` constants).
+  * A class can implement **multiple interfaces** (supports multiple inheritance of type).
+  * Used to define a **contract** that multiple classes can implement.
+
 
 ### Inheritance vs composition
 - Inheritance: “is-a” relationship; can lead to tight coupling and brittle hierarchies.
@@ -159,9 +201,25 @@ List<Integer> l = new LinkedList<>();
 l.addFirst(0);
 ```
 
-### How does `HashMap` work? Why are `equals()` and `hashCode()` important?
-- `HashMap` uses an array of buckets; keys hash to a bucket index. Within a bucket, collisions are resolved via linked lists or balanced trees (since Java 8).
-- Lookup: compute hash → index → traverse bucket → compare using `equals`.
+### How does `HashMap` work?
+* `HashMap` stores data in **key-value pairs**.
+* Internally, it uses an **array of buckets**, where each bucket is a linked list (or a balanced tree since Java 8 if collisions are high).
+* When you put a key-value pair:
+
+  * The **hashCode()** of the key is computed.
+  * The hash is mapped to an index in the array (`index = hash % capacity`).
+  * If the bucket at that index is empty → store the entry.
+  * If not empty → handle **collision** using chaining (linked list) or tree (if too many collisions).
+* When you get a value:
+
+  * The key’s hashCode is computed again.
+  * The correct bucket index is found.
+  * It traverses the bucket, checking keys with **equals()** to find the right entry.
+* Load factor (default **0.75**) determines when to resize the HashMap. Once threshold = capacity × load factor is reached, the HashMap **doubles its size** and rehashes all keys.
+* `hashCode()` ensures fast bucket lookup, while `equals()` ensures key uniqueness.
+
+
+### Why are `equals()` and `hashCode()` important?
 - Proper `hashCode` and `equals` ensure keys distribute well and equality works.
 `equals()` determines if two objects are equal based on their content or state, while `hashCode()` calculates a unique integer value for an object to help efficiently store it in a hash-based data structure like HashMap or HashSet. Both methods play essential roles in maintaining the correct behavior of collections and consistent object comparison within Java applications.
 
@@ -430,9 +488,6 @@ By understanding the basics of Java garbage collection, you can develop more eff
 ## Exception Handling
 
 ### Checked vs unchecked exceptions
-Got it. Let’s go step by step.
-
----
 
 **What are Exceptions in Java?**
 
@@ -597,173 +652,291 @@ class DomainException extends RuntimeException {
 
 ---
 
-## Java 8: Lambdas, Streams, Method References, Optional
+## Q. What are some features of java 8?
 
-### Functional interfaces and lambda syntax
-**Functional Interfaces:**
+* **Lambda Expressions** → Enables functional programming by passing behavior as parameters.
+* **Functional Interfaces** → Interfaces with a single abstract method (e.g., `Runnable`, `Comparator`).
+* **Stream API** → For processing collections in a functional style (filter, map, reduce).
+* **Optional Class** → To handle `null` values and avoid `NullPointerException`.
+* **CompletableFuture & Concurrency Updates** → For better async programming.
+* **Collectors Utility** → Used with streams for grouping, partitioning, and summarizing data.
+* **Default Methods in Interfaces** → Interfaces can have method implementations using `default`.
+* **Static Methods in Interfaces** → Interfaces can also define static utility methods.
+* **New Date and Time API (java.time)** → Immutable and thread-safe replacement for `Date` and `Calendar`.
+* **Nashorn JavaScript Engine** → Allows running JavaScript code inside Java applications.
 
-- A functional interface is an interface with a single abstract method (SAM), which enables the use of lambda expressions and method references in Java.
-- Functional interfaces are annotated with `@FunctionalInterface` to ensure that they only contain one abstract method.
-- Some built-in functional interfaces in Java include `Runnable`, `Callable`, `Consumer`, `Supplier`, `Function`, `Predicate`, and `BiFunction`, among others.
 
-**Lambda Syntax:**
+## Q. Explain Lambda expression with code example?
 
-- Lambda expressions are anonymous functions that can be used to create instances of functional interfaces without explicitly defining a separate class for each function implementation.
-- The general structure of a lambda expression is as follows:
-  ```
-    (parameters) -> { statements }
-  ```
-- You can also omit the return keyword and expression if the body of the lambda consists of only one statement, or if the functional interface's method returns void.
-- Lambda expressions can capture and store references to any variables from the enclosing scope that are used in the lambda body (known as capturing variables).
-- To call a lambda expression, you invoke its associated functional interface method on an instance of the appropriate class (e.g., `MyLambda myLambda = () -> System.out.println("Hello!");` and then `myLambda.invoke()` or `myLambda.run()`, depending on the functional interface).
-
-**Method references:**
-
-* Method references are a feature in Java that allows you to refer to a method directly without creating an instance of the class or implementing an interface. This provides a concise way to use pre-existing methods as if they were lambda expressions or functional interfaces.
-
-* Here's an example demonstrating method reference syntax:
+* **Definition**: Lambda expressions are anonymous functions (no name, return type inferred) introduced in Java 8 to enable functional programming.
+* **Syntax**:
 
   ```java
-  List<String> list = Arrays.asList("Apple", "Banana", "Orange");
-  list.sort(String::compareTo);
+  (parameters) -> expression
+  (parameters) -> { statements }
   ```
 
-  In this example, `String::compareTo` is a method reference that refers to the `compareTo()` method of the `String` class. Instead of creating an anonymous class or lambda expression to sort the list, you can use the method reference directly as an argument for the `sort()` method.
-
-  There are three types of method references:
-  1. Instance Method Reference - `Object::instanceMethod` refers to a non-static instance method of any object. You'll need to provide an instance of the class when using this method reference.
-  2. Static Method Reference - `Class::staticMethod` refers to a static method in any class.
-  3. Constructor Method Reference - `ClassName::new` refers to a constructor of a specific class.
-
-
-To summarize:
-- Functional interfaces are essential for functional programming in Java, as they allow for the use of lambda expressions and method references to create anonymous functions that implement a single abstract method.
-- Lambda syntax provides a concise way to define anonymous functions, with the general structure consisting of parameters, an arrow (`->`), and the function body.
-- Method references are a concise way to refer to pre-existing methods as if they were lambda expressions or functional interfaces, providing an efficient and readable alternative for common operations.
-- Instance method reference syntax is `Object::instanceMethod`, static method reference syntax is `Class::staticMethod`, and constructor method reference syntax is `ClassName::new`.
-
-
-### Stream pipeline anatomy
-  Sure! The Stream API in Java offers a powerful way to process collections of data using functional programming concepts. Here's the anatomy of a basic stream pipeline:
-
-1. Source - A stream pipeline starts with a source, which is a collection (such as an array, list, or set) or a stream itself. The source provides elements for processing in the pipeline.
-
-2. Intermediate Operations - These operations transform the input data and produce new streams containing the results. Each intermediate operation can be chained together to create complex pipelines. Common intermediate operations include:
-   - `filter(Predicate predicate)` - Filters elements based on a provided predicate.
-   - `map(Function mapper)` - Transforms each element using a provided function.
-   - `distinct()` - Removes duplcate elements from the stream.
-   - `skip(long n)` - Skips the first n elements of the stream and returns the remaining elements.
-   - `limit(long n)` - Returns only the first n elements of the stream.
-
-3. Terminal Operations - These operations consume the elements in the pipeline, produce a result (such as a summary statistic or reduced value), and then terminate the pipeline. Common terminal operations include:
-   - `count()` - Returns the number of elements in the stream.
-   - `forEach(Consumer action)` - Applies an action to each element of the stream.
-   - `collect(Collector collector)` - Collects the elements into a specific data structure (such as a list or set).
-   - `max()`, `min()`, `sum()`, and other aggregate operations - Returns the maximum, minimum, sum, or other aggregate results of the stream.
-
-Here's an example demonstrating a simple stream pipeline:
+### Example 1: Runnable without Lambda
 
 ```java
-List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
-int sum = numbers.stream()
-               .filter(n -> n % 2 == 0) // filter odd numbers
-               .map(n -> n * n)          // square each number
-               .reduce(0, Integer::sum); // sum up the squares of even numbers
+Runnable r1=new Runnable(){
+    public void run(){
+        System.out.println("Hello from thread");
+    }
+};
+new Thread(r1).start();
 ```
 
-In this example, a stream is created from an array of integers, filtered to only include even numbers, transformed by squaring each number, and finally reduced to find the sum of all squared even numbers.
-
-To summarize:
-- A stream pipeline consists of a source (a collection or stream), intermediate operations that transform data, and terminal operations that produce results from processed elements.
-- Common intermediate operations include filtering, mapping, distinctions, skipping, limiting, and sorting, while common terminal operations include counting, forEach actions, collecting, aggregating, and reducing.
-- By chaining together multiple operations in a stream pipeline, you can create powerful data processing solutions efficiently and concisely using functional programming concepts.
+### Example 2: Runnable with Lambda
 
 ```java
-int sum = Stream.of(1,2,3,4,5)
-  .filter(x -> x % 2 == 1)
-  .mapToInt(Integer::intValue)
-  .sum();
+Runnable r2=()->System.out.println("Hello from thread");
+new Thread(r2).start();
 ```
 
-### `Optional` usage
-`Optional<T>` is a container object that either contains a non-null value or represents an empty value (null). It helps manage null values more effectively by providing a way to handle situations where a method might return null.
+### Example 3: Sorting with Comparator
+
+```java
+List<String> names=Arrays.asList("Aditya","Raj","Kumar");
+
+// Without Lambda
+Collections.sort(names,new Comparator<String>(){
+    public int compare(String a,String b){
+        return a.compareTo(b);
+    }
+});
+
+// With Lambda
+Collections.sort(names,(a,b)->a.compareTo(b));
+```
+
+### Example 4: Stream with Lambda
+
+```java
+List<Integer> nums=Arrays.asList(1,2,3,4,5);
+nums.stream().filter(n->n%2==0).forEach(n->System.out.println(n));
+```
+
+👉 Lambda helps write shorter, cleaner, and more readable code by removing boilerplate.
 
 
-**Why not just use `if(obj != null)`?**
+## Q. What are `Functional Interfaces`?
 
-* Yes, it works, but **null references are dangerous** because:
-
-  * They can easily be forgotten and cause `NullPointerException` (NPE).
-  * `null` does not express *intent* — we don’t know whether it means "missing value", "not initialized", or "error".
-
-
-**Why use `Optional` instead?**
-
-`Optional<T>` is a **container object** that may or may not contain a value. It was introduced in **Java 8** to handle optional values in a more **expressive and safer way**.
-
-Benefits:
-
-1. **Readability / Intent** → Code shows clearly when a value might be absent.
-
-   ```java
-   Optional<String> username = findUserById(id); 
-   ```
-
-   This tells the reader: the user *might not exist*.
-
-2. **Avoid null checks** → Instead of repeating `if(obj != null)`, we can use built-in safe methods:
-
-   ```java
-   username.ifPresent(u -> System.out.println("Hello " + u));
-   String name = username.orElse("Guest");
-   ```
-
-3. **Encourages functional style** → Use `map`, `filter`, `flatMap` to chain transformations safely:
-
-   ```java
-   String upper = username.map(String::toUpperCase).orElse("UNKNOWN");
-   ```
-
-4. **Null-safety in APIs** → When an API returns `Optional<T>`, the caller *knows* they must handle the absence of a value.
-   Contrast with returning `null` → caller might forget the null check.
+* **Definition**: A **functional interface** is an interface with exactly **one abstract method**.
+* They can have any number of **default** or **static** methods.
+* They are the target type for **lambda expressions** and **method references**.
+* Annotated with `@FunctionalInterface` (optional but recommended).
 
 ---
 
-**Example: Traditional vs Optional**
-
-**Traditional null check:**
+### Example 1: Custom Functional Interface
 
 ```java
-String name = getName();
-if (name != null) {
-    System.out.println(name.toUpperCase());
+@FunctionalInterface
+interface MyFunctionalInterface {
+    void greet(String name); // Single abstract method
+}
+
+public class Demo {
+    public static void main(String[] args) {
+        // Using Lambda
+        MyFunctionalInterface f=(n)->System.out.println("Hello, "+n);
+        f.greet("Aditya");
+    }
 }
 ```
 
-**Using Optional:**
+---
+
+### Example 2: Using Built-in Functional Interface
 
 ```java
-Optional<String> name = getNameOptional();
-name.map(String::toUpperCase).ifPresent(System.out::println);
+import java.util.function.Predicate;
+
+public class Demo {
+    public static void main(String[] args) {
+        Predicate<Integer> isEven=n->n%2==0;
+        System.out.println(isEven.test(4)); // true
+        System.out.println(isEven.test(5)); // false
+    }
+}
+```
+
+## Q. What are Stream APIs?
+* **Stream API** (introduced in Java 8) is used to process collections of data (like `List`, `Set`) in a functional style.
+* It allows performing operations such as **filtering, mapping, sorting, and reducing** with concise, readable code.
+* **Streams are not data structures**, they don’t store elements. Instead, they provide a pipeline of operations on data.
+* Key features:
+
+  * Declarative (clean, SQL-like operations).
+  * Supports **parallel processing** for performance.
+  * Supports **intermediate operations** (return Stream) and **terminal operations** (produce result).
+
+---
+
+### Example 1: Filtering & Mapping
+
+```java
+import java.util.*;
+import java.util.stream.*;
+
+public class Demo {
+    public static void main(String[] args) {
+        List<String> names=Arrays.asList("Aditya","Raj","Alex","Ankit");
+
+        // Filter names starting with 'A' and convert to uppercase
+        List<String> result=names.stream()
+                                 .filter(n->n.startsWith("A"))
+                                 .map(String::toUpperCase)
+                                 .toList();
+
+        System.out.println(result); // [ADITYA, ALEX, ANKIT]
+    }
+}
 ```
 
 ---
 
-### ⚠️ When NOT to use `Optional`
+### Example 2: Reduction
 
-* As **fields in DTOs/entities** (bad for serialization frameworks, adds overhead).
-* In **performance-critical code** (unboxing overhead).
-* Use it mainly for **method return types** to express "might be missing".
+```java
+import java.util.*;
+
+public class Demo {
+    public static void main(String[] args) {
+        List<Integer> nums=Arrays.asList(1,2,3,4,5);
+
+        int sum=nums.stream().reduce(0,(a,b)->a+b);
+        System.out.println(sum); // 15
+    }
+}
+```
 
 ---
 
-👉 So the difference is:
+### Common Stream Operations
 
-* `obj != null` is a raw null check (unsafe, ambiguous).
-* `Optional` is **a semantic, safer, and more expressive way** of modeling "nullable" values, reducing accidental `NullPointerException`s.
+* **Intermediate**: `filter()`, `map()`, `sorted()`, `distinct()`, `limit()`
+* **Terminal**: `collect()`, `forEach()`, `reduce()`, `count()`, `toList()`
+
+## Q. What are CompletableFuture? why and when to use them?
+
+* **CompletableFuture** (Java 8) is an advanced implementation of `Future` used for asynchronous programming.
+* Unlike plain `Future`, it allows you to **manually complete tasks**, chain multiple async operations, and handle results/errors without blocking.
+
+---
+
+### Why use CompletableFuture?
+
+* To perform **non-blocking async tasks** (e.g., API calls, DB queries).
+* To **combine multiple tasks** (run in parallel, then merge results).
+* To **chain tasks** (perform next step after previous completes).
+* To **handle exceptions** gracefully in async flows.
+
+---
+
+### Key Features
+
+* `runAsync()` → run a task without return value.
+* `supplyAsync()` → run a task that returns a value.
+* `thenApply()` → transform result.
+* `thenAccept()` → consume result (no return).
+* `thenCombine()` → combine results of two futures.
+* `exceptionally()` → handle errors.
+
+---
+
+### Example
+
+```java
+import java.util.concurrent.*;
+
+public class Demo {
+    public static void main(String[] args) throws Exception {
+        CompletableFuture<Integer> future=CompletableFuture.supplyAsync(() -> {
+            // Simulate long task
+            return 10;
+        });
+
+        // Transform result
+        CompletableFuture<Integer> squared=future.thenApply(x -> x*x);
+
+        // Get final result (blocking here just for demo)
+        System.out.println(squared.get()); // 100
+    }
+}
+```
+
+---
+
+✅ Use **CompletableFuture** when:
+
+* You want **non-blocking async execution**.
+* You need to **compose multiple async operations**.
+* You want **cleaner async code** compared to `Future` + `ExecutorService`.
 
 
-### Q. What is the difference between `.of()` and `.ofNullable()` ?
+## Q. What are Optional Class in java? Why and when to use them?
+
+* **Optional** (Java 8) is a container object that may or may not hold a non-null value.
+* It was introduced to avoid **NullPointerException (NPE)** and make null checks more readable.
+
+---
+
+### Why use Optional?
+
+* To represent **optional/nullable values** without explicitly using `null`.
+* To **avoid explicit null checks** (`if(obj != null)`).
+* To **express intent** clearly: "this value may be absent".
+
+---
+
+### When to use Optional?
+
+* When a method may or may not return a value (instead of returning `null`).
+* As a **return type**, not as a field in entities/DTOs (bad practice for serialization).
+* For **functional-style operations** with `map`, `filter`, `orElse`.
+
+---
+
+### Example
+
+```java
+import java.util.*;
+
+public class Demo {
+    public static void main(String[] args) {
+        // Creating Optional
+        Optional<String> opt=Optional.ofNullable(null);
+
+        // Check presence
+        System.out.println(opt.isPresent()); // false
+
+        // Default value
+        String val=opt.orElse("default");
+        System.out.println(val); // default
+
+        // Map and filter
+        Optional<String> name=Optional.of("Aditya");
+        name.filter(s -> s.length()>3)
+            .map(String::toUpperCase)
+            .ifPresent(System.out::println); // ADITYA
+    }
+}
+```
+
+---
+
+✅ Use **Optional** when:
+
+* You want to avoid **NPE** in method return values.
+* You want to make **code more declarative and readable**.
+* You need to apply **functional operations** directly on possibly-null values.
+
+Do you want me to also list **common methods of Optional** (like `of`, `empty`, `orElseGet`, `orElseThrow`) for quick notes?
+
+
+## Q. What is the difference between `.of()` and `.ofNullable()` ?
  The main difference between `Optional.of()` and `Optional.ofNullable()` is that the former throws a `NullPointerException` if it receives null as an argument, whereas the latter wraps the provided value in an Optional instance without throwing an exception.
 
 Here's the code snippet for each method:
