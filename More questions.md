@@ -354,7 +354,7 @@ Key aspects of the JMM include:
 The JMM is fundamental for developing robust and reliable concurrent applications in Java, providing the necessary framework for thread safety and preventing issues like data races and inconsistent state. Developers utilize synchronization constructs like `synchronized` blocks, `volatile` variables, and concurrent utility classes (e.g., from `java.util.concurrent`) to adhere to the JMM's guarantees and ensure correct program behavior.
 
 
-## Q.12: What is Future in java? What are some more related concepts to Future in java?
+## Q.12: What is Future in java?
  In Java, a `Future` is an object that represents the result of an asynchronous computation. It allows you to carry out a computation in the background and obtain its result without waiting for it to complete, or check if the computation is still running.
 
 The `Future` interface in Java provides methods such as:
@@ -363,23 +363,13 @@ The `Future` interface in Java provides methods such as:
 2. `isDone()`: Determines whether the computation has completed.
 3. `cancel(boolean mayInterruptIfRunning)`: Attempts to cancel a computation before it finishes, if possible.
 
-Related concepts to Future in Java include:
-
-1. ExecutorService: An interface that manages a group of threads and executes tasks asynchronously. It provides methods for submitting tasks (such as `submit()` for returning a `Future` object) and shutting down the thread pool.
-2. Callable: A functional interface in Java. Extends the Runnable interface, but instead of a void return type, it has a generic return type. Callables are used to specify a task that returns a result when executed asynchronously.
-3. CompletionService: An interface that manages a pool of Futures and returns completed tasks in a block-less manner using the `take()` method. This allows for more efficient handling of multiple asynchronous computations.
-4. Fork/Join Framework: A library provided by Java that implements an efficient solution for parallelizing recursive tasks, such as divide-and-conquer algorithms. It uses a work-stealing thread pool and automatically manages the partitioning and merging of subtasks.
-5. Callback interface: A functional interface used to handle results or exceptions from asynchronous computations. The `FutureCallback` and `FutureTaskCallback` interfaces are examples of callbacks in Java.
-6. Promise: A construct that represents a value that may not be available yet but will become available at some point in the future. It can be used to handle values produced by asynchronous functions, similar to Futures, but with additional features like attaching callbacks for handling errors or completing the promise manually.
-7. Reactive programming: A programming paradigm that focuses on data streams and the propagation of changes through observable sequences of data. In Java, libraries such as RxJava provide support for reactive programming concepts, including Observables (a sequence of items) and operators for transforming and combining them. This can be used in combination with Futures to manage multiple asynchronous computations more efficiently.
-
 ---
 
 ## Q.13: Can you teach me about Java 8 features (Lambdas, Streams, Functional Interfaces)?
 
 ### Lambdas:
 
- Certainly! In Java 8 and later versions, lambda expressions were introduced as a way to write concise functional-style code. Lambda expressions allow you to create small anonymous functions that can be used in place of traditional methods and interfaces.
+ In Java 8 and later versions, lambda expressions were introduced as a way to write concise functional-style code. Lambda expressions allow you to create small anonymous functions that can be used in place of traditional methods and interfaces.
 
 Here's the basic syntax for a lambda expression:
 
@@ -418,7 +408,7 @@ Supplier<Boolean> randomBoolean = () -> Math.random() > 0.5;
 
 
 ### Streams:
- Absolutely! In Java, Stream is a sequence of elements that can be processed in parallel or sequentially using functional-style operations. A Stream can come from various sources such as collections (e.g., arrays and lists), I/O channels, or even generating sequences on the fly.
+In Java, Stream is a sequence of elements that can be processed in parallel or sequentially using functional-style operations. A Stream can come from various sources such as collections (e.g., arrays and lists), I/O channels, or even generating sequences on the fly.
 
 Here are some key features and concepts of Java Streams:
 
@@ -462,7 +452,7 @@ Here are some built-in Java 8 functional interfaces:
 
 These functional interfaces can be used in various scenarios such as handling callbacks or processing data with lambda expressions. The ability to create custom functional interfaces allows developers to design their own abstractions for specific use cases, making it easier to write concise and flexible code using Java 8's lambda expressions.
 
-## Q.14: What is future and completablefuture in java?
+## Q.14: What is `Future` and `CompletableFuture` in java?
 
 ### **1. `Future` in Java**
 

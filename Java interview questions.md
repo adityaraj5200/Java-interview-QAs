@@ -740,7 +740,7 @@ interface MyFunctionalInterface {
 public class Demo {
     public static void main(String[] args) {
         // Using Lambda
-        MyFunctionalInterface f=(n)->System.out.println("Hello, "+n);
+        MyFunctionalInterface f = (n)->System.out.println("Hello, "+n);
         f.greet("Aditya");
     }
 }
@@ -954,36 +954,3 @@ In the example above, `optional1` is created without any issues because it conta
 To summarize:
 - `Optional.of()` does not accept null values and throws a `NullPointerException` if provided null.
 - `Optional.ofNullable()` accepts null values and wraps them in an empty Optional instance without throwing an exception.
-
----
-
-
-## Appendix: Quick Checklists
-
-### Concurrency gotchas
-- Avoid publishing partially constructed objects.
-- Use immutable or effectively immutable data where possible.
-- Prefer high-level concurrent utilities over low-level `wait/notify`.
-- Keep synchronized regions small; avoid nested locks; define a lock ordering.
-
-### `equals`/`hashCode` rules
-- Reflexive, symmetric, transitive, consistent; `x.equals(null)` is false.
-- Equal objects must have equal hash codes.
-- Use the same fields in both methods; consider `Objects.equals`/`Objects.hash`.
-
-### Stream performance tips
-- Avoid unnecessary boxing/unboxing (`mapToInt`, `mapToLong`).
-- Beware `parallel()` unless you have CPU-bound work and sensible splitting.
-- Prefer collectors over manual mutable accumulators unless necessary.
-
----
-
-## How to Extend This Document
-- Add new sections as `###` under an existing domain (e.g., “Java 17 features”).
-- Append new questions using the pattern:
-  - Question as `###`
-  - Concise theory answer
-  - Short code snippet demonstrating usage
-- Keep examples minimal and focused on the concept being tested.
-
-
