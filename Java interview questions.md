@@ -111,7 +111,7 @@ System.out.println(a == b);        // false (different objects)
 System.out.println(a.equals(b));   // true (structural equality)
 ```
 
-### What is immutability? Why is `String` immutable? What is string interning?
+### What is immutability? Why is `String` immutable?
 - Immutable objects cannot change state after construction, enabling thread-safety, caching, and safe sharing.
 
 - String is immutable because of:
@@ -126,6 +126,7 @@ System.out.println(a.equals(b));   // true (structural equality)
 
   * **Performance optimization:** Operations like substring, concatenation, and intern rely on immutability for correctness and efficiency.
 
+### What is string interning?
 
 - String interning in Java refers to the optimization technique where the JVM stores only one copy of a given string literal in memory, regardless of how many times that exact string appears in the source code. This means that if two string literals have the same value, they will refer to the same object instance in memory.
 
@@ -233,21 +234,10 @@ class User {
 }
 ```
 
-### Fail-fast vs fail-safe iterators
-- Fail-fast (e.g., most `java.util` collections): Detect structural modification during iteration and throw `ConcurrentModificationException`.
-- Fail-safe (e.g., `CopyOnWriteArrayList`, `ConcurrentHashMap` iterators): Iterate over a snapshot; updates may not be visible during iteration; no CME.
-
-```java
-List<Integer> list = new ArrayList<>(List.of(1, 2, 3));
-for (Integer x : list) {
-  if (x == 2) list.add(99); // ConcurrentModificationException
-}
-```
-
 ### Ordering differences: `HashMap` vs `LinkedHashMap` vs `TreeMap`
 - `HashMap`: No ordering guarantees.
-- `LinkedHashMap`: Predictable iteration order (insertion or access order).
 - `TreeMap`: Sorted by natural order or a provided `Comparator`.
+- `LinkedHashMap`: Predictable iteration order (insertion or access order).
 
 ```java
 Map<String,Integer> lm = new LinkedHashMap<>();
@@ -258,40 +248,47 @@ Map<String,Integer> tm = new TreeMap<>(Comparator.reverseOrder());
 
 ## Generics
 
-### What is type erasure? Implications?
-- Java generics are implemented via type erasure: generic type info is not available at runtime (mostly).
-- Implications: No primitive type parameters; no `new T[]`; no runtime checks of parameterized type arguments; `instanceof List<String>` is illegal.
+Generics allows us to write code that works with different data types using a single class, interface or method. Instead of creating separate versions for each type, we use type parameters (like `<T>`) to make the code reusable and type-safe.
+
+* **Purpose / Why used:**
+
+  * **Type safety:** Errors are caught at compile-time rather than runtime.
+  * **Code reusability:** Same class or method can work with multiple data types.
+  * **Eliminates explicit casting:** No need to cast objects when retrieving from collections.
+  * **Improves readability:** Makes the intended type clear to developers.
+
+---
+
+### Example: Generic Class
 
 ```java
-// Illegal: List<String> at runtime is just List
-// if (list instanceof List<String>) { ... } // compile error
-boolean b = list instanceof List; // allowed
+class Box<T> {
+    private T value;
+    public void set(T value){ this.value=value; }
+    public T get(){ return value; }
+}
+
+public class Demo {
+    public static void main(String[] args) {
+        Box<Integer> intBox=new Box<>();
+        intBox.set(10);
+        System.out.println(intBox.get()); // 10
+
+        Box<String> strBox=new Box<>();
+        strBox.set("Hello");
+        System.out.println(strBox.get()); // Hello
+    }
+}
 ```
 
-### Wildcards and PECS
-- PECS: Producer Extends, Consumer Super.
-  - Use `? extends T` when reading (producer).
-  - Use `? super T` when writing (consumer).
+Generics make the `Box` class **reusable for any type** while ensuring **type safety**.
 
-```java
-void readNumbers(List<? extends Number> src) { Number n = src.get(0); }
-void writeIntegers(List<? super Integer> dst) { dst.add(42); }
-```
-
-### Bounded type parameters
-- Upper bounds: `<T extends Number & Comparable<T>>`
-- Lower bounds apply to wildcards only (`? super T`), not type parameters.
-- Multiple bounds: class first, then interfaces.
-
-```java
-static <T extends Comparable<T>> T max(T a, T b) { return a.compareTo(b) >= 0 ? a : b; }
-```
 
 ---
 
 ## Multithreading
 
-### `Thread` vs `Runnable` vs `Callable`
+`Runnable` vs `Callable`
 In Java, both Runnable and Callable are interfaces used for concurrent programming to execute tasks asynchronously. However, there are some key differences between them:
 
 1. **Runnable**: The Runnable interface is the simplest way of creating a new thread in Java. It defines a single method called `run()` that should be implemented by users to specify what the thread does when it starts executing. There is no return type for the run() method, and exceptions thrown from within the run() method are unchecked.
@@ -326,7 +323,7 @@ pool.shutdown();
 new Thread(() -> System.out.println(Thread.currentThread().getName())).start();
 ```
 
-### `synchronized`, intrinsic locks, and reentrancy
+### synchronized, intrinsic locks, and reentrancy
 - Methods/blocks marked `synchronized` acquire the intrinsic lock of the object/class.
 
   An intrinsic lock (or monitor lock) is a built-in synchronization mechanism associated with each object instance in Java. When a thread acquires an intrinsic lock of an object, it prevents other threads from acquiring the lock until it releases it.
@@ -387,9 +384,6 @@ void stop() { running = false; } // other thread will see it
 These methods are often used in situations where multiple threads need to coordinate their actions, such as when working with shared resources or data structures that require specific states before other operations can be performed. It's important to note that `wait()`, `notify()`, and `notifyAll()` should only be called from inside a synchronized block or method to ensure proper access control to the shared object being waited upon.
 
 The main difference between `notify()` and `notifyAll()` lies in the number of threads that will be awakened: using `notify()` wakes up one thread, while `notifyAll()` wakes up all waiting threads. This means that if there are multiple threads waiting on an object when `notifyAll()` is called, they will all be notified and compete for the lock again, whereas with `notify()`, only one thread will be awakened at a time.
-
-To better understand their usage in real-life scenarios, I recommend checking out examples that demonstrate how these methods can be used to implement producer-consumer patterns or resource management within concurrent programs.
-- `Lock`/`Condition` (from `java.util.concurrent.locks`) provide more flexible features (tryLock, fairness, multiple conditions).
 
 ```java
 Lock lock = new ReentrantLock();
