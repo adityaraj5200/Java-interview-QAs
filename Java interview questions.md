@@ -948,3 +948,18 @@ In the example above, `optional1` is created without any issues because it conta
 To summarize:
 - `Optional.of()` does not accept null values and throws a `NullPointerException` if provided null.
 - `Optional.ofNullable()` accepts null values and wraps them in an empty Optional instance without throwing an exception.
+
+
+## Q. Difference between java 8 and 17 and their features?
+
+> Java 8 was a major release that introduced functional programming features, while Java 17 is a long-term support (LTS) release focused on performance, language enhancements, and modern APIs.
+
+**Key Differences and Features:**
+
+| Aspect | Java 8 (2014) | Java 17 (2021)|
+| ------ | ------        |   ------      |
+| **Programming Paradigm**   | Introduced **Functional Programming** with Lambdas, Streams, and Functional Interfaces | Focused on **Modern Java**—sealed classes, pattern matching, records                                                                                                     |
+| **Core Features**          | - Lambda Expressions<br>- Streams API<br>- Optional Class<br>- Functional Interfaces<br>- Date/Time API (java.time)<br>- Default & Static methods in interfaces | - **Records** (to create immutable data carriers)<br>- **Sealed Classes** (restricted inheritance)<br>- **Pattern Matching for instanceof**<br>- **Switch Expressions** (enhanced)<br>- **Text Blocks** (multi-line strings)<br>- **JEP 356: Enhanced Pseudo-Random Number Generators** |
+| **Performance & JVM**      | Old Metaspace handling, PermGen removed                                                                                                                         | Improved Garbage Collectors (**ZGC, G1 optimizations**), faster startup and lower memory footprint                                                                                                                                                                                      |
+| **LTS**                    | Yes (widely used in enterprises)                                                                                                                                | Yes (current LTS; long-term support till 2029)                                                                                                                                                                                                                                          |
+| **Security & API Updates** | Introduced base changes                                                                                                                                         | Stronger encapsulation of JDK internals (JEP 403), better TLS, crypto updates                                                                                                                                                                                                           |
