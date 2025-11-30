@@ -1,6 +1,4 @@
-=====================================
-ARRAYS (1D)
-===========
+# ARRAYS (1D)
 
 1. Declaration & Initialization
 
@@ -88,11 +86,8 @@ for (int x : arr)
 * Must use arr.length, not arr.size()
 * Arrays passed by reference behavior
 
-=====================================
 
-=====================================
-ARRAYS (2D)
-===========
+# ARRAYS (2D)
 
 1. Declaration & Initialization
 
@@ -189,9 +184,7 @@ for (int[] row : mat)
 * mat[i].length can vary (jagged arrays)
 * No pointer arithmetic
 
-=====================================
-ARRAYS (3D)
-===========
+# ARRAYS (3D)
 
 1. Declaration & Initialization
 
@@ -297,11 +290,8 @@ for (int[][] layer : cube)
 * Jagged 3D arrays are allowed
 * No sizeof operator
 
-=====================================
 
-=====================================
-STRINGS
-=======
+# STRINGS
 
 1. Declaration & Initialization
 
@@ -386,12 +376,9 @@ for (char c : s.toCharArray())
 * No direct indexing assignment
 * * creates new String each time
 
-=====================================
 
 
-=====================================
-ARRAYLIST (1D)
-==============
+# ARRAYLIST (1D)
 
 1. Declaration & Initialization
 
@@ -474,11 +461,8 @@ for (int x : arr)
 * remove(int) vs remove(Integer) ambiguity
 * Capacity ≠ size
 
-=====================================
 
-=====================================
-ARRAYLIST (2D)
-==============
+# ARRAYLIST (2D)
 
 1. Declaration & Initialization
 
@@ -578,11 +562,8 @@ for (List<Integer> row : mat)
 * Jagged rows are allowed
 * No contiguous memory guarantee
 
-=====================================
 
-=====================================
-ARRAYLIST (3D)
-==============
+# ARRAYLIST (3D)
 
 1. Declaration & Initialization
 
@@ -696,12 +677,9 @@ for (List<List<Integer>> layer : cube)
 * Heavy memory overhead vs arrays
 * No contiguous memory guarantee
 
-=====================================
 
 
-=====================================
-LINKEDLIST
-==========
+# LINKEDLIST
 
 1. Declaration & Initialization
 
@@ -789,12 +767,9 @@ for (int x : list)
 * Higher overhead than ArrayList
 * Not cache-friendly
 
-=====================================
 
 
-=====================================
-STACK
-=====
+# STACK
 
 1. Declaration & Initialization
 
@@ -880,12 +855,9 @@ for (int i = st.size() - 1; i >= 0; i--)
 * search() is 1-based index
 * Inherits from Vector
 
-=====================================
 
 
-=====================================
-QUEUE
-=====
+# QUEUE
 
 1. Declaration & Initialization
 
@@ -966,11 +938,8 @@ for (int x : q)
 * remove() throws exception if empty
 * Front element accessed via peek()
 
-=====================================
 
-=====================================
-DEQUE
-=====
+# DEQUE
 
 1. Declaration & Initialization
 
@@ -1061,12 +1030,9 @@ while (it.hasNext())
 * null elements not allowed in ArrayDeque
 * Use poll/peek instead of remove/get
 
-=====================================
 
 
-=====================================
-HASHMAP
-=======
+# HASHMAP
 
 1. Declaration & Initialization
 
@@ -1155,11 +1121,8 @@ for (int v : map.values())
 * HashMap is not ordered
 * Needs wrapper types, not primitives
 
-=====================================
 
-=====================================
-HASHSET
-=======
+# HASHSET
 
 1. Declaration & Initialization
 
@@ -1237,11 +1200,8 @@ for (int x : set)
 * Iteration order is not guaranteed
 * Needs wrapper types, not primitives
 
-=====================================
 
-=====================================
-TREEMAP
-=======
+# TREEMAP
 
 1. Declaration & Initialization
 
@@ -1325,11 +1285,8 @@ for (int k : map.keySet())
 * Slower than HashMap
 * No null keys allowed in TreeMap
 
-=====================================
 
-=====================================
-TREESET
-=======
+# TREESET
 
 1. Declaration & Initialization
 
@@ -1414,11 +1371,8 @@ while (it.hasNext())
 * Slower than HashSet
 * No null elements allowed
 
-=====================================
 
-=====================================
-PRIORITYQUEUE (HEAP)
-====================
+# PRIORITYQUEUE (HEAP)
 
 1. Declaration & Initialization
 
@@ -1496,11 +1450,8 @@ for (int x : pq)
 * Iteration does not give sorted order
 * Null elements not allowed
 
-=====================================
 
-=====================================
-BITSET
-======
+# BITSET
 
 1. Declaration & Initialization
 
@@ -1578,4 +1529,3 @@ for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
 * Indices beyond size auto-expand
 * No direct iteration like array
 
-=====================================
