@@ -458,6 +458,88 @@ for (int i = 0; i < sb.length(); i++)
 * No direct operator+ concatenation
 
 
+# STRINGBUFFER
+
+1. Declaration & Initialization
+
+```java
+int n = size;
+StringBuffer sb = new StringBuffer(n);
+```
+
+// initializes thread-safe StringBuffer with initial capacity n
+
+2. Insert / Add
+
+```java
+sb.append(value);
+sb.insert(idx, value);
+```
+
+// appends at end or inserts at index
+
+3. Remove / Delete
+
+```java
+sb.deleteCharAt(idx);
+sb.delete(l, r);
+```
+
+// removes single character or range [l, r)
+
+4. Search / Contains
+
+```java
+int pos = sb.indexOf(target);
+boolean found = pos != -1;
+```
+
+// checks if target substring exists
+
+5. Update / Modify
+
+```java
+sb.setCharAt(idx, newChar);
+```
+
+// updates character at index
+
+6. Traversal / Iteration
+
+```java
+for (int i = 0; i < sb.length(); i++)
+{
+    use(sb.charAt(i));
+}
+```
+
+// index-based traversal
+
+7. Common Built-in Methods
+
+* sb.append(x) → append at end
+* sb.insert(i, x) → insert at index
+* sb.delete(i, j) → delete range
+* sb.setCharAt(i, c) → update character
+* sb.length() → current length
+* sb.capacity() → current capacity
+* sb.toString() → convert to String
+
+8. Time Complexity
+
+* Insert: O(1) amortized / O(n) at index
+* Delete: O(n)
+* Search: O(n)
+* Access: O(1)
+
+9. Common C++ → Java Pitfalls
+
+* Thread-safe but slower than StringBuilder
+* capacity() ≠ length()
+* insert/delete cause shifts
+* Rarely used in DSA due to synchronization
+
+
 # ARRAYLIST (1D)
 
 1. Declaration & Initialization
