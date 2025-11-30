@@ -376,9 +376,7 @@ for (char c : s.toCharArray())
 * No direct indexing assignment
 * * creates new String each time
 
-=====================================
-STRINGBUILDER
-=============
+# STRINGBUILDER
 
 1. Declaration & Initialization
 
@@ -458,9 +456,6 @@ for (int i = 0; i < sb.length(); i++)
 * capacity() ≠ length()
 * insert/delete cause shifts
 * No direct operator+ concatenation
-
-=====================================
-
 
 
 # ARRAYLIST (1D)
