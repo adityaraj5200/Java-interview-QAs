@@ -1900,4 +1900,95 @@ public static void main(String[] args)
 `static` is used to create class-level members that are shared by all objects.
 
 
-## Q.60: 
+## Q.60: Why do wrapper classes exist in Java? What extra functionality do they provide?
+Wrapper classes in **Java** exist primarily to bridge the gap between **primitive types** (like `int`, `double`, `boolean`) and **object-oriented features** of the Java language.
+
+### 1. **Primitives are not objects**
+
+Java is an object-oriented language, but its primitive types are **not objects**.
+Many Java APIs—especially collections—require objects, not primitives.
+
+Example:
+
+```java
+List<int> numbers = new ArrayList<>(); // ❌ Not allowed
+List<Integer> numbers = new ArrayList<>(); // ✅ Works because Integer is an object
+```
+
+Wrapper classes allow primitives to be **used where objects are required**.
+
+---
+
+### 2. **To provide utility methods**
+
+Primitive types have no methods, but wrapper classes provide **useful helper methods**, such as:
+
+#### Parsing strings:
+
+```java
+int n = Integer.parseInt("123");       // String → int
+double val = Double.parseDouble("3.14");
+```
+
+#### Converting to string:
+
+```java
+String s = Integer.toString(10);
+```
+
+#### Getting metadata:
+
+```java
+int max = Integer.MAX_VALUE;
+int bytes = Integer.BYTES;
+```
+
+---
+
+### 3. **To allow null values**
+
+Primitives **cannot be null**, but wrapper class objects can.
+
+Example:
+
+```java
+Integer x = null;  // Allowed
+int y = null;      // ❌ Not allowed
+```
+
+This is important when working with databases, JSON, optional fields, etc.
+
+---
+
+### 4. **Autoboxing and unboxing**
+
+Wrapper classes enable automatic conversion between primitives and their object equivalents.
+
+```java
+Integer x = 5;  // autoboxing: int → Integer
+int y = x;      // unboxing: Integer → int
+```
+
+This improves developer convenience while maintaining performance benefits of primitives.
+
+---
+
+## 🎯 **Summary: What Extra Functionality Do Wrapper Classes Provide?**
+
+| Primitive | Wrapper Class | Additional Features                               |
+| --------- | ------------- | ------------------------------------------------- |
+| `int`     | `Integer`     | Parsing, constants, nullability, generics support |
+| `double`  | `Double`      | Methods like `isNaN()`, parsing, metadata         |
+| `boolean` | `Boolean`     | String conversion, constants (`TRUE`, `FALSE`)    |
+| ...       | ...           | ...                                               |
+
+#### **Extra Features Provided by Wrapper Classes**
+
+* Can be used in **collections** and generic classes
+* Hold **null** values
+* Provide **utility methods** for parsing, converting, comparing
+* Support **autoboxing/unboxing**
+* Provide **metadata constants** (e.g., `MAX_VALUE`, `MIN_VALUE`)
+
+
+## Q.61: 
