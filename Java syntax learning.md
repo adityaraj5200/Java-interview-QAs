@@ -637,6 +637,51 @@ for (int i = 0; i < n; i++)
 }
 ```
 
+If we want to initialize with some values:
+```java
+import java.util.*;
+
+public class DynamicMatrix {
+    public static void main(String[] args) {
+
+        List<List<Integer>> matrix = new ArrayList<>();
+
+        // Initialize
+        matrix.add(new ArrayList<>(List.of(1, 2, 3)));
+        matrix.add(new ArrayList<>(List.of(4, 5, 6)));
+        matrix.add(new ArrayList<>(List.of(7, 8, 9)));
+
+        // Manipulations
+        matrix.get(1).add(99); // add element
+        matrix.add(new ArrayList<>(List.of(10, 11, 12))); // add row
+        matrix.get(0).remove(1); // remove element
+        matrix.remove(2); // remove row
+
+        // Print matrix
+        for (List<Integer> row : matrix) {
+            System.out.println(row);
+        }
+    }
+}
+```
+
+If we want to initialize an n x n matrix with default values (e.g., 0):
+```java
+int n = 3;
+int m = 4;
+
+List<List<Integer>> matrix = new ArrayList<>();
+
+for (int i = 0; i < n; i++) {
+    List<Integer> row = new ArrayList<>();
+    for (int j = 0; j < m; j++) {
+        row.add(0);   // initial value
+    }
+    matrix.add(row);
+}
+```
+
+
 // initializes a 2D ArrayList with n rows
 
 2. Insert / Add

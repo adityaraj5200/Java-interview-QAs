@@ -1973,7 +1973,7 @@ This improves developer convenience while maintaining performance benefits of pr
 
 ---
 
-## 🎯 **Summary: What Extra Functionality Do Wrapper Classes Provide?**
+### 🎯 **Summary: What Extra Functionality Do Wrapper Classes Provide?**
 
 | Primitive | Wrapper Class | Additional Features                               |
 | --------- | ------------- | ------------------------------------------------- |
@@ -1991,4 +1991,148 @@ This improves developer convenience while maintaining performance benefits of pr
 * Provide **metadata constants** (e.g., `MAX_VALUE`, `MIN_VALUE`)
 
 
-## Q.61: 
+## Q.61: What is reflection in java? Why and how to use it?
+Reflection in Java is a powerful feature that lets your program **inspect and manipulate classes, methods, fields, and constructors at runtime** — even if you don’t know their names at compile time.
+
+---
+
+✅ **What is Reflection?**
+
+Reflection is a mechanism in Java that allows you to:
+
+* Examine a class’s structure (methods, fields, constructors)
+* Instantiate objects dynamically
+* Invoke methods dynamically
+* Access or modify private fields/methods
+* Load classes at runtime
+
+All of this is done through the **java.lang.reflect** package and the **Class** object.
+
+---
+
+✅ **Why Use Reflection?**
+
+Reflection enables dynamic and flexible behavior that is otherwise impossible with static typing.
+
+### **Common Use Cases**
+
+1. **Frameworks & Libraries**
+
+   * Spring, Hibernate, Gson, JUnit use reflection heavily.
+   * They inspect annotations, inject dependencies, map data to objects, etc.
+
+2. **Dependency Injection / Inversion of Control**
+
+   * Creating objects without calling `new` explicitly.
+
+3. **Serialization / Deserialization**
+
+   * Accessing private fields to convert objects to/from JSON or XML.
+
+4. **Building Generic Tools**
+
+   * IDEs, debuggers, and testing tools use reflection for runtime introspection.
+
+5. **Plugin Systems**
+
+   * Load classes dynamically based on configuration.
+
+---
+
+✅ **How to Use Reflection?**
+
+### **1. Getting the Class object**
+
+```java
+Class<?> cls1 = Class.forName("com.example.MyClass");
+Class<?> cls2 = obj.getClass();
+Class<?> cls3 = MyClass.class;
+```
+
+---
+
+### **2. Creating objects at runtime**
+
+```java
+Class<?> cls = Class.forName("com.example.Person");
+Object obj = cls.getDeclaredConstructor().newInstance();
+```
+
+---
+
+### **3. Accessing fields**
+
+```java
+Field field = cls.getDeclaredField("name");
+field.setAccessible(true); // bypass private
+field.set(obj, "Aditya");
+System.out.println(field.get(obj));
+```
+
+---
+
+### **4. Invoking methods**
+
+```java
+Method method = cls.getDeclaredMethod("sayHello");
+method.setAccessible(true);
+method.invoke(obj);
+```
+
+---
+
+### **5. Accessing constructors**
+
+```java
+Constructor<?> constructor = cls.getConstructor(String.class);
+Object obj2 = constructor.newInstance("Aditya");
+```
+
+---
+
+⚠️ **Drawbacks / When NOT to Use Reflection**
+
+Reflection is powerful but comes with trade-offs:
+
+| Issue                        | Explanation                                      |
+| ---------------------------- | ------------------------------------------------ |
+| **Performance overhead**     | Reflective calls are slower.                     |
+| **Security risks**           | Can break encapsulation (`setAccessible(true)`). |
+| **Harder to maintain**       | Code becomes dynamic and less readable.          |
+| **Compile-time safety lost** | Errors occur at runtime.                         |
+
+**Use reflection only when necessary** — mainly in frameworks, libraries, or dynamic systems.
+
+---
+
+✅ **Simple Example**
+
+### **Class**
+
+```java
+class Person {
+    private String name;
+
+    private void greet() {
+        System.out.println("Hello, " + name);
+    }
+}
+```
+
+### **Reflection**
+
+```java
+Person p = new Person();
+
+Class<?> cls = p.getClass();
+
+// Access private field
+Field f = cls.getDeclaredField("name");
+f.setAccessible(true);
+f.set(p, "Aditya");
+
+// Call private method
+Method m = cls.getDeclaredMethod("greet");
+m.setAccessible(true);
+m.invoke(p);
+```
