@@ -629,11 +629,16 @@ for (int x : arr)
 1. Declaration & Initialization
 
 ```java
-int n = size;
-List<List<Integer>> mat = new ArrayList<>(n);
-for (int i = 0; i < n; i++)
-{
-    mat.add(new ArrayList<>(n));
+int n = 3, m = 4;
+
+List<List<Integer>> matrix = new ArrayList<>();
+
+for (int i = 0; i < n; i++) {
+    List<Integer> row = new ArrayList<>();
+    for (int j = 0; j < m; j++) {
+        row.add(0); // initial value
+    }
+    matrix.add(row);
 }
 ```
 
@@ -646,10 +651,9 @@ public class DynamicMatrix {
 
         List<List<Integer>> matrix = new ArrayList<>();
 
-        // Initialize
-        matrix.add(new ArrayList<>(List.of(1, 2, 3)));
-        matrix.add(new ArrayList<>(List.of(4, 5, 6)));
-        matrix.add(new ArrayList<>(List.of(7, 8, 9)));
+        matrix.add(new ArrayList<>(List.of(1, 2, 3)));       // Row 1
+        matrix.add(new ArrayList<>(List.of(4, 5)));          // Row 2 (different size allowed)
+        matrix.add(new ArrayList<>(List.of(6, 7, 8, 9)));    // Row 3
 
         // Manipulations
         matrix.get(1).add(99); // add element
@@ -684,7 +688,7 @@ for (int i = 0; i < n; i++) {
 
 // initializes a 2D ArrayList with n rows
 
-2. Insert / Add
+1. Insert / Add
 
 ```java
 mat.get(i).add(value);

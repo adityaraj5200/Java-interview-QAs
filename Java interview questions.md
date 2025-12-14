@@ -1,5 +1,3 @@
-## Core Java
-
 ## Q.1: What is the JDK, JRE, and JVM?
 * **JVM (Java Virtual Machine):**
   * Abstract machine that runs Java bytecode.
@@ -199,39 +197,65 @@ Generics make the `Box` class **reusable for any type** while ensuring **type sa
 
 
 ## Q.13: Difference between `Runnable` vs `Callable`?
-In Java, both Runnable and Callable are interfaces used for concurrent programming to execute tasks asynchronously. However, there are some key differences between them:
+In Java, **Runnable** and **Callable** are both used to represent tasks that can be executed by threads or executor services — but they differ in important ways.
 
-1. **Runnable**: The Runnable interface is the simplest way of creating a new thread in Java. It defines a single method called `run()` that should be implemented by users to specify what the thread does when it starts executing. There is no return type for the run() method, and exceptions thrown from within the run() method are unchecked.
-2. **Callable**: The Callable interface extends Runnable and provides additional functionality by allowing a task to return a result value and throw checked exceptions. It defines two methods: `call()`, which performs the main task, and `get()`, which retrieves the result value from the completed future task object. Unlike Runnable, Callable allows for returning a value or throwing checked exceptions, which can be handled by calling the get() method on the Future object returned by an ExecutorService.
+### ✔️ **Key Differences Between Runnable and Callable**
 
-Here's a comparison table for better understanding:
+| Feature                      | **Runnable**                                      | **Callable**                                            |
+| ---------------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| **Return Value**             | Cannot return a value (`void run()`)              | Can return a value (`V call()`)                         |
+| **Exception Handling**       | Cannot throw checked exceptions directly          | Can throw checked exceptions                            |
+| **Method**                   | `public void run()`                               | `public V call() throws Exception`                      |
+| **Use With ExecutorService** | Submitted via `execute()` or `submit()`           | Submitted via `submit()` only                           |
+| **Result Access**            | No direct result, unless modifying shared objects | Returns a `Future<V>` from `submit()` to get the result |
+| **Functional Interface**     | Yes (SAM)                                         | Yes (SAM)                                               |
 
-|                   | `Runnable`            | `Callable`           |
-|-------------------|-----------------------|----------------------|
-| Interface         | Yes, extends Object   | Yes, extends Runnable |
-| Run method        | Yes (void)            | Yes (returns T)       |
-| Return type       | No return type         | Returns a value of type T |
-| Exceptions thrown | Unchecked exceptions   | Checked exceptions    |
-| Result retrieval  | Not possible           | Retrievable via Future.get() |
+---
 
-In summary, if you need to execute a task without returning any result or throwing checked exceptions, Runnable is the best choice. If your task requires returning a value or throwing checked exceptions, use Callable and retrieve the result using Future objects in combination with an ExecutorService.
-
-- Prefer using `ExecutorService` to manage threads.
+### ✔️ **Runnable Example**
 
 ```java
-ExecutorService pool = Executors.newFixedThreadPool(4);
-Future<Integer> f = pool.submit(() -> 40 + 2);
-System.out.println(f.get());
-pool.shutdown();
+Runnable task = () -> {
+    System.out.println("Task running");
+};
+
+new Thread(task).start();
 ```
 
-## Difference between `start()` vs `run()`?
-- `run()`: The task’s logic; calling it directly runs in the current thread.
-- `start()`: Creates a new OS thread that then calls `run()` asynchronously.
+---
+
+### ✔️ **Callable Example**
 
 ```java
-new Thread(() -> System.out.println(Thread.currentThread().getName())).start();
+Callable<Integer> task = () -> {
+    return 10;
+};
+
+ExecutorService executor = Executors.newSingleThreadExecutor();
+Future<Integer> future = executor.submit(task);
+
+System.out.println(future.get()); // Outputs: 10
+executor.shutdown();
 ```
+
+---
+
+### ✔️ Which one should you use?
+
+| Use Case                                          | Choose                  |
+| ------------------------------------------------- | ----------------------- |
+| You need a simple task with no return value       | **Runnable**            |
+| You need the task to **return a result**          | **Callable**            |
+| You need the task to **throw checked exceptions** | **Callable**            |
+| You are using `Thread` directly                   | **Runnable** is simpler |
+
+---
+
+### ✔️ Quick Summary (In One Line)
+
+> **Runnable = runs a task without a result.
+> Callable = runs a task that returns a result and can throw exceptions.**
+
 
 ## Q.14: What is synchronized, intrinsic locks, and reentrancy?
 - Methods/blocks marked `synchronized` acquire the intrinsic lock of the object/class.
@@ -963,62 +987,8 @@ concurrentMap.put(1, "One");
 * If asked: *“Why ConcurrentHashMap over Hashtable?”*
   👉 Because **Hashtable locks the entire map**, while **ConcurrentHashMap locks only portions (buckets/segments)**, giving much better concurrency.
 
----
 
-## Q.39: Draw an **internal working diagram of ConcurrentHashMap locking** (bucket-level locking vs Hashtable global lock)?
-
-### 🔑 Differences: **HashMap vs Hashtable vs ConcurrentHashMap**
-
-| Feature              | **HashMap**                                                      | **Hashtable**                       | **ConcurrentHashMap**                                                       |
-| -------------------- | ---------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
-| **Thread Safety**    | ❌ Not synchronized (not thread-safe).                            | ✅ Synchronized (all methods).       | ✅ Thread-safe (uses modern concurrency techniques).                         |
-| **Performance**      | Fastest (no sync overhead).                                      | Slower (global lock on entire map). | Much faster than Hashtable (locks only segments/buckets, not whole map).    |
-| **Null Keys/Values** | ✅ 1 null key, multiple null values.                              | ❌ No null key/values.               | ❌ No null key, null values not allowed.                                     |
-| **Introduced In**    | Java 1.2                                                         | Java 1.0 (legacy).                  | Java 5 (as part of `java.util.concurrent`).                                 |
-| **Iteration**        | Iterator (fail-fast → throws `ConcurrentModificationException`). | Enumerator (not fail-fast).         | Iterator (fail-safe → won’t throw CME, but may not reflect recent updates). |
-| **Use Case**         | Single-threaded, or manually synchronized.                       | Legacy, rarely used today.          | High-performance thread-safe alternative.                                   |
-
----
-
-### ✅ Quick Example
-
-```java
-// HashMap
-Map<Integer, String> map = new HashMap<>();
-map.put(1, "One");
-map.put(null, "NullKey"); // ✅ allowed
-map.put(2, null);         // ✅ allowed
-
-// Hashtable
-Map<Integer, String> table = new Hashtable<>();
-table.put(1, "One");
-// table.put(null, "X");   // ❌ NullPointerException
-// table.put(2, null);     // ❌ NullPointerException
-
-// ConcurrentHashMap
-Map<Integer, String> concurrentMap = new ConcurrentHashMap<>();
-concurrentMap.put(1, "One");
-// concurrentMap.put(null, "X"); // ❌ NullPointerException
-// concurrentMap.put(2, null);   // ❌ NullPointerException
-```
-
----
-
-### 🔥 Interview Tips
-
-* **HashMap** → use for *non-thread-safe*, single-threaded cases.
-* **Hashtable** → avoid (only for legacy support).
-* **ConcurrentHashMap** → use for *highly concurrent, thread-safe* scenarios.
-* If asked: *“Why ConcurrentHashMap over Hashtable?”*
-  👉 Because **Hashtable locks the entire map**, while **ConcurrentHashMap locks only portions (buckets/segments)**, giving much better concurrency.
-
----
-
-Do you want me to also draw an **internal working diagram of ConcurrentHashMap locking** (bucket-level locking vs Hashtable global lock)?
-
----
-
-## Q.40: How does Garbage Collection work in JVM?
+## Q.39: How does Garbage Collection work in JVM?
 
 **Garbage Collection in JVM**
 
@@ -1034,7 +1004,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 **Interview line:**
 “Garbage Collection in Java automatically manages memory by removing objects no longer referenced. It mainly works with the Young and Old generations using algorithms like mark-sweep and compaction. This reduces memory leaks and makes Java memory-safe without requiring manual deallocation.”
 
-## Q.41: Explain volatile and synchronized in multithreading?
+## Q.40: Explain volatile and synchronized in multithreading?
 
 ### **1. `volatile`**
 
@@ -1066,7 +1036,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 
 
 
-## Q.42: Deep copy vs Shallow copy?
+## Q.41: Deep copy vs Shallow copy?
 
 
 ### **Shallow Copy**
@@ -1098,7 +1068,7 @@ Do you want me to also draw an **internal working diagram of ConcurrentHashMap l
 
 ---
 
-## Q.43: How does the Java memory model work (Heap, Stack, Metaspace)?
+## Q.42: How does the Java memory model work (Heap, Stack, Metaspace)?
 Here’s a clear **interview-friendly explanation** of the **Java Memory Model (JMM):**
 
 ---
@@ -1139,7 +1109,7 @@ Here’s a clear **interview-friendly explanation** of the **Java Memory Model (
 ---
 
 
-## Q.44: What happens if two keys have the same hashcode?
+## Q.43: What happens if two keys have the same hashcode?
 In Java, if two keys have the same **hashCode**, the following happens inside a `HashMap` (or similar hash-based collections):
 
 1. **Bucket selection:** Both keys will map to the same bucket (index) in the hash table.
@@ -1157,7 +1127,7 @@ In Java, if two keys have the same **hashCode**, the following happens inside a 
 
 
 
-## Q.45: Difference between synchronized block and ConcurrentHashMap?
+## Q.44: Difference between synchronized block and ConcurrentHashMap?
 Here’s the difference between a **synchronized block** and a **ConcurrentHashMap**:
 
 ---
@@ -1196,7 +1166,7 @@ Here’s the difference between a **synchronized block** and a **ConcurrentHashM
 
 ---
 
-## Q.46: Why ConcurrentHashMap are Much faster than synchronized blocks under high concurrency?
+## Q.45: Why ConcurrentHashMap are Much faster than synchronized blocks under high concurrency?
 ConcurrentHashMap is much faster than synchronized blocks under high concurrency because of **how locking is handled**:
 
 ---
@@ -1243,7 +1213,7 @@ ConcurrentHashMap is much faster than synchronized blocks under high concurrency
 
 
 
-## Q.47: How does Garbage Collection work in JVM?
+## Q.46: How does Garbage Collection work in JVM?
 The core process of JVM Garbage Collection typically involves the following phases:
 
 **Marking Phase:**
@@ -1256,7 +1226,7 @@ After marking, the garbage collector scans the heap and identifies the memory oc
 
 
 
-## Q.48: Explain the Java Memory Model briefly?
+## Q.47: Explain the Java Memory Model briefly?
 The **Java Memory Model (JMM)** is a specification that defines how threads interact with memory in a Java Virtual Machine (JVM), particularly in multithreaded environments. It establishes rules and guarantees regarding the visibility, ordering, and atomicity of variable access, ensuring consistent behavior of concurrent programs across different hardware and JVM implementations.
 
 Key aspects of the JMM include:
@@ -1269,7 +1239,7 @@ Key aspects of the JMM include:
 The JMM is fundamental for developing robust and reliable concurrent applications in Java, providing the necessary framework for thread safety and preventing issues like data races and inconsistent state. Developers utilize synchronization constructs like `synchronized` blocks, `volatile` variables, and concurrent utility classes (e.g., from `java.util.concurrent`) to adhere to the JMM's guarantees and ensure correct program behavior.
 
 
-## Q.49: What is Future in java?
+## Q.48: What is Future in java?
  In Java, a `Future` is an object that represents the result of an asynchronous computation. It allows you to carry out a computation in the background and obtain its result without waiting for it to complete, or check if the computation is still running.
 
 The `Future` interface in Java provides methods such as:
@@ -1280,7 +1250,7 @@ The `Future` interface in Java provides methods such as:
 
 ---
 
-## Q.50: Can you teach me about Java 8 features (Lambdas, Streams, Functional Interfaces)?
+## Q.49: Can you teach me about Java 8 features (Lambdas, Streams, Functional Interfaces)?
 
 ### Lambdas:
 
@@ -1367,7 +1337,7 @@ Here are some built-in Java 8 functional interfaces:
 
 These functional interfaces can be used in various scenarios such as handling callbacks or processing data with lambda expressions. The ability to create custom functional interfaces allows developers to design their own abstractions for specific use cases, making it easier to write concise and flexible code using Java 8's lambda expressions.
 
-## Q.51: What is `Future` and `CompletableFuture` in java?
+## Q.50: What is `Future` and `CompletableFuture` in java?
 
 ### **1. `Future` in Java**
 
@@ -1458,7 +1428,7 @@ Result: 84
 ---
 
 
-## Q.52: What is Tomcat?
+## Q.51: What is Tomcat?
 
 ### **What is Tomcat?**
 
@@ -1491,7 +1461,7 @@ Tomcat = **middleman between browser and your Java code**.
 ---
 
 
-## Q.53: What is Abstraction? How do you implement it in your project?
+## Q.52: What is Abstraction? How do you implement it in your project?
 **Abstraction in Java**:
 Abstraction is the process of hiding implementation details and showing only the essential features of an object. It helps reduce complexity and increase reusability by focusing on *what an object does* rather than *how it does it*.
 
@@ -1557,7 +1527,7 @@ public class Main {
 👉 *"In my project, we used abstraction mainly to design service layers. For example, in a payment module, we defined an interface `PaymentService` that had methods like `processPayment()`, and then we had multiple implementations like `CreditCardService`, `UpiService`, etc. The calling code only depended on the abstraction (`PaymentService`) and not on the concrete classes. This allowed us to easily extend the system in the future without changing the existing code."*
 
 
-## Q.54: How do you create a REST API? Write a sample GET and POST API.
+## Q.53: How do you create a REST API? Write a sample GET and POST API.
 Here’s a simple **Spring Boot REST API example** showing both **GET** and **POST**:
 
 ```java
@@ -1615,7 +1585,7 @@ class User {
 This is the minimal working REST API.
 
 
-## Q.55: Your Java application is running slow in production. What steps would you take to investigate?
+## Q.54: Your Java application is running slow in production. What steps would you take to investigate?
 Investigating performance issues in a Java application requires following a systematic approach to identify the root cause of the problem, optimize the code, and monitor the application's behavior. Here are some steps you can follow:
 
 1. **Profiling**: Start by profiling your application using tools like VisualVM, JProfiler, or YourKit. These tools can help you understand where your application spends most of its time during execution, identify bottlenecks, and pinpoint slow-performing methods that need optimization.
@@ -1635,7 +1605,7 @@ Investigating performance issues in a Java application requires following a syst
 8. **Collaboration**: Work closely with other team members, such as system administrators or DevOps engineers, to optimize the underlying infrastructure and configuration settings that might affect application performance. This includes database configurations, network settings, or hardware resources like CPU, RAM, and disk I/O.
 
 
-## Q.56: What are some Key features of java 8?
+## Q.55: What are some Key features of java 8?
 Here’s a concise list of **key features introduced in Java 8** (most asked in interviews):
 
 
@@ -1718,7 +1688,7 @@ Do you want me to also prepare a **1-minute crisp version** (just 4–5 must-men
 
 
 
-## Q.57: Why are strings immutable in java?
+## Q.56: Why are strings immutable in java?
 Strings in Java are **immutable** (cannot be changed once created). The reasons are mainly around **security, performance, and reliability**:
 
 ---
@@ -1758,7 +1728,7 @@ Strings in Java are **immutable** (cannot be changed once created). The reasons 
 ✅ **Interview-ready one-liner:**
 Strings in Java are immutable to ensure security, enable string pool caching, guarantee thread-safety, and provide consistent behavior in collections like HashMap.
 
-## Q.58: What happens when this code is executed?
+## Q.57: What happens when this code is executed?
 ```java
 class A {}
 class B extends A {}
@@ -1769,7 +1739,7 @@ A obj = new B();
 > When `A obj = new B();` executes, the JVM creates a `B` object in the heap and assigns its reference to a variable `obj` of type `A` on the stack. This is **upcasting** — the compiler treats `obj` as type `A` (so only `A`’s members are accessible), but at runtime the actual object is of type `B`, enabling **runtime polymorphism** if methods are overridden.
 
 
-## Q.59: What's the use of static keyword in java?
+## Q.58: What's the use of static keyword in java?
 Here is a clean, **copy-paste ready** version for your notes:
 
 ---
@@ -1900,7 +1870,7 @@ public static void main(String[] args)
 `static` is used to create class-level members that are shared by all objects.
 
 
-## Q.60: Why do wrapper classes exist in Java? What extra functionality do they provide?
+## Q.59: Why do wrapper classes exist in Java? What extra functionality do they provide?
 Wrapper classes in **Java** exist primarily to bridge the gap between **primitive types** (like `int`, `double`, `boolean`) and **object-oriented features** of the Java language.
 
 ### 1. **Primitives are not objects**
@@ -1991,7 +1961,7 @@ This improves developer convenience while maintaining performance benefits of pr
 * Provide **metadata constants** (e.g., `MAX_VALUE`, `MIN_VALUE`)
 
 
-## Q.61: What is reflection in java? Why and how to use it?
+## Q.60: What is reflection in java? Why and how to use it?
 Reflection in Java is a powerful feature that lets your program **inspect and manipulate classes, methods, fields, and constructors at runtime** — even if you don’t know their names at compile time.
 
 ---
@@ -2136,3 +2106,2333 @@ Method m = cls.getDeclaredMethod("greet");
 m.setAccessible(true);
 m.invoke(p);
 ```
+
+
+
+## Q.61: What is the difference between `sleep()` and `wait()`?
+
+| Feature / Behavior               | `sleep()`                                                         | `wait()`                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Defined In**                   | `java.lang.Thread`                                                | `java.lang.Object`                                                                       |
+| **Purpose**                      | Pauses the currently executing thread for a specified time.       | Causes a thread to release the lock and wait until notified.                             |
+| **Lock/Monitor Requirement**     | Does **not** require a lock. Can be called anywhere.              | Must be called **inside a synchronized block/method** because it involves monitor locks. |
+| **Releases Lock?**               | ❌ No, it does **not release** the lock if it holds one.           | ✔️ Yes, it **releases** the lock on the object it’s called on.                           |
+| **Wakes Up Automatically?**      | ✔️ Yes, after the specified sleep time elapses.                   | ❌ No, it requires `notify()` / `notifyAll()` or interruption.                            |
+| **Typical Use Case**             | To pause execution for timing-related tasks (e.g., retry, delay). | Thread communication—waiting for some condition to become true.                          |
+| **Throws InterruptedException?** | ✔️ Yes                                                            | ✔️ Yes                                                                                   |
+| **Static or Instance Method?**   | Static method (`Thread.sleep()`)                                  | Instance method (called on an object)                                                    |
+| **Effect on Thread Scheduler**   | Thread is put to TIMED_WAITING for a specific duration.           | Thread enters WAITING or TIMED_WAITING depending on the overload used.                   |
+| **Common Error When Using**      | —                                                                 | Calling without a synchronized block → `IllegalMonitorStateException`                    |
+
+
+## Q.62: Can you call run() directly on a Thread instead of start()? What happens?Yes, you *can* call `run()` directly on a `Thread`, but it does **not** start a new thread.
+
+**What happens when you call `run()`?**
+
+* The `run()` method executes **synchronously** in the **current thread**.
+* No new thread is created.
+* It behaves like a normal method call.
+
+**What happens when you call `start()`?**
+
+* A **new OS-level thread** is created.
+* The JVM schedules that new thread.
+* That new thread then internally calls `run()`.
+
+**Example:**
+
+```java
+Thread t = new Thread(() -> {
+    System.out.println("Running: " + Thread.currentThread().getName());
+});
+
+t.run();   // prints main
+t.start(); // prints Thread-0
+```
+
+**Conclusion:**
+Calling `run()` directly defeats the purpose of multi-threading. Only `start()` creates and runs code on a separate thread.
+
+
+
+## Q.63: Is volatile enough to make a variable thread-safe? Why or why not?
+`volatile` alone is **not** enough to make a variable thread-safe in most cases.
+
+**What `volatile` provides:**
+
+* **Visibility:** Writes to a volatile variable are immediately visible to other threads.
+* **Ordering:** Prevents instruction reordering around the volatile read/write.
+
+**What volatile does *not* provide:**
+
+* **Atomicity for compound operations.**
+  Operations like `x++`, `count += 5`, or “check-then-act” (e.g., `if(flag) doSomething()`) are **not atomic**, even if `count` or `flag` is volatile.
+
+**Example of non-thread-safe volatile usage:**
+
+```java
+volatile int x = 0;
+
+void increment() {
+    x++;  // read -> add -> write (three steps, not atomic)
+}
+```
+
+Multiple threads can interleave these steps and lose updates.
+
+**When volatile *is* enough:**
+
+* When the variable is only used with **atomic writes and reads**, not compound operations.
+  Example: A volatile boolean used as a shutdown flag.
+
+**Conclusion:**
+Use `volatile` for visibility and ordering, not for atomicity. Thread safety for compound operations requires synchronization, Locks, or atomic classes (`AtomicInteger`, etc.).
+
+
+## Q.64: What happens if System.gc() is called? Does the JVM guarantee GC?
+`System.gc()` is only a **request** to the JVM to perform garbage collection.
+
+**What actually happens:**
+
+* The JVM **may** start a garbage collection cycle.
+* The JVM is **not required** to run GC immediately.
+* The JVM is **not required** to run GC at all in response to the call.
+
+**Why no guarantee:**
+
+* GC behavior is JVM-dependent and highly optimized.
+* Ignoring `System.gc()` may improve performance.
+* Many JVMs provide flags like `-XX:+DisableExplicitGC` to completely ignore such calls.
+
+**Key points:**
+
+* `System.gc()` triggers a *suggestion*, not a command.
+* The JVM decides *when* and *whether* to run GC.
+* GC is always nondeterministic.
+
+
+
+## Q.65: How is HashMap different from Hashtable beyond synchronization?Key differences between **HashMap** and **Hashtable** beyond synchronization:
+
+1. **Null Handling**
+
+   * **HashMap:** Allows one `null` key and multiple `null` values.
+   * **Hashtable:** Does **not** allow `null` keys or values.
+
+2. **Legacy vs Modern**
+
+   * **Hashtable:** Legacy class from early Java (pre-Collections framework).
+   * **HashMap:** Part of the Collections framework; preferred modern implementation.
+
+3. **Iterator Type**
+
+   * **HashMap:** Iterators are **fail-fast** (throw `ConcurrentModificationException` if structurally modified).
+   * **Hashtable:** Iterators are **fail-safe-ish** because it uses **Enumerator**, which does not throw CME (but is outdated and not recommended).
+
+4. **Performance**
+
+   * **HashMap:** Faster due to no inherent synchronization.
+   * **Hashtable:** Slower because all methods are synchronized.
+
+5. **Inheritance Hierarchy**
+
+   * **HashMap:** Extends `AbstractMap<K, V>`.
+   * **Hashtable:** Extends `Dictionary<K, V>` (a legacy abstract class).
+
+6. **Internal Implementation Differences (Modern Java)**
+
+   * **HashMap:** Uses tree bins (red-black trees) when buckets get large (Java 8+) to avoid worst-case O(n).
+   * **Hashtable:** Does **not** use tree bins; still uses only linked lists.
+
+7. **Rehashing Mechanism**
+
+   * **HashMap:** Doubles capacity when threshold exceeded.
+   * **Hashtable:** Increases capacity to `2 * old + 1`.
+
+8. **Preferred Usage**
+
+   * **HashMap:** General-purpose use.
+   * **Hashtable:** Only kept for backward compatibility; replaced by `ConcurrentHashMap` for thread safety.
+
+These differences make `HashMap` the standard choice and `Hashtable` largely obsolete.
+
+
+
+## Q.66: How is ConcurrentHashMap different from synchronizing a normal HashMap?
+Key differences between **ConcurrentHashMap** and synchronizing a normal `HashMap`:
+
+1. **Granular Locking vs Full-Map Locking**
+
+   * **ConcurrentHashMap:** Uses fine-grained locking (segments in older versions, per-bin CAS + synchronized blocks in modern Java).
+     Only the affected bucket or portion of the map is locked.
+   * **Synchronized HashMap (or Hashtable):** A single global lock on the entire map.
+     Every operation blocks all other operations.
+
+2. **Concurrent Reads**
+
+   * **ConcurrentHashMap:** Allows **lock-free reads**; most reads happen without acquiring any lock.
+   * **Synchronized HashMap:** Every read operation must acquire the single lock.
+
+3. **Concurrent Writes**
+
+   * **ConcurrentHashMap:** Multiple threads can update different buckets concurrently.
+   * **Synchronized HashMap:** Only one writer at a time; blocks the whole map.
+
+4. **Iteration Safety**
+
+   * **ConcurrentHashMap:** Provides **weakly consistent iterators**:
+
+     * Do not throw `ConcurrentModificationException`.
+     * Reflect some (not necessarily all) updates during iteration.
+   * **Synchronized HashMap:** Iterators are **fail-fast** and throw CME if modified without holding the lock.
+
+5. **Null Handling**
+
+   * **ConcurrentHashMap:** Does **not** allow null keys or values.
+   * **Synchronized HashMap:** Allows them (because HashMap does).
+
+6. **Performance Under Contention**
+
+   * **ConcurrentHashMap:** Scales very well with multiple threads.
+   * **Synchronized HashMap:** Performance collapses under contention because every operation is serialized.
+
+7. **Internal Architecture**
+
+   * **ConcurrentHashMap:**
+
+     * Java 7: Lock striping via segments.
+     * Java 8+: CAS + synchronized on individual bins + tree bins for worst-case performance.
+   * **Synchronized HashMap:** Simply wraps each method with `synchronized`.
+
+Summary:
+**ConcurrentHashMap is designed for high concurrency with minimal blocking, while synchronizing a normal HashMap serializes all access and is not scalable.**
+
+
+
+## Q.67: Can a constructor throw an exception?Yes, a constructor can throw an exception.
+
+Key points:
+
+1. **Checked exceptions** are allowed:
+
+   ```java
+   class A {
+       A() throws IOException {
+           throw new IOException("Error");
+       }
+   }
+   ```
+
+2. **Unchecked exceptions** (RuntimeException) are also allowed.
+
+3. If a constructor throws an exception:
+
+   * Object creation **fails**.
+   * The object is **not considered constructed**, so no reference is returned.
+
+4. Common use cases:
+
+   * Validating input parameters during construction.
+   * Failing fast when required resources (files, sockets, DB connections) cannot be acquired.
+
+
+
+## Q.68: Difference between checked and unchecked exceptions — why does Java have both?
+**Checked exceptions**
+
+* Subclasses of `Exception` (excluding `RuntimeException`).
+* Must be either **caught** or **declared** using `throws`.
+* Represent **recoverable** conditions.
+* Examples: `IOException`, `SQLException`, `ClassNotFoundException`.
+
+**Unchecked exceptions**
+
+* Subclasses of `RuntimeException`.
+* No requirement to catch or declare.
+* Represent **programming errors** or **logic bugs**.
+* Examples: `NullPointerException`, `ArrayIndexOutOfBoundsException`, `IllegalArgumentException`.
+
+**Why Java has both:**
+
+1. **Enforced error handling for recoverable failures**
+   Checked exceptions force developers to acknowledge real-world failures (I/O issues, network errors, missing files).
+
+2. **No clutter for programmer mistakes**
+   Unchecked exceptions allow the language to signal bugs without forcing try/catch everywhere.
+
+3. **Separation of concerns**
+
+   * Checked: environmental failures you *should* handle.
+   * Unchecked: coding failures you *should fix*, not handle at runtime.
+
+4. **Compile-time safety**
+   Checked exceptions provide early detection for operations that inherently may fail.
+
+Overall:
+Java uses checked exceptions for reliability in external/IO scenarios, and unchecked exceptions for programmer errors, keeping APIs cleaner and more intentional.
+
+
+
+## Q.69: What happens if an exception is thrown inside a static block?
+If an exception is thrown inside a static block during class initialization:
+
+1. **If it’s a checked exception:**
+   It must be wrapped or rethrown as an unchecked exception because static blocks cannot declare `throws`. Any checked exception escaping the block causes a compilation error.
+
+2. **If an unchecked exception escapes the static block:**
+
+   * Class initialization **fails**.
+   * JVM throws an **ExceptionInInitializerError**.
+   * The original exception is stored as the cause.
+
+3. **The class is marked as "erroneous"**
+   Future attempts to use the class (e.g., creating objects, accessing static fields/methods) will result in a **NoClassDefFoundError** for that class.
+
+Example:
+
+```java
+class Test {
+    static {
+        int x = 1 / 0;  // ArithmeticException
+    }
+}
+```
+
+Outcome:
+
+* JVM throws `ExceptionInInitializerError` with cause `ArithmeticException`.
+* Any later access to `Test` triggers `NoClassDefFoundError`.
+
+
+
+## Q.70: Can a class be both final and abstract? Why not?
+No, a class cannot be both **final** and **abstract**.
+
+**Reason:**
+
+* An **abstract** class is meant to be **incomplete** and must be **extended** so subclasses can provide implementations for abstract methods.
+* A **final** class cannot be **extended** at all.
+
+These two keywords contradict each other:
+
+* `abstract` → “must be subclassed.”
+* `final` → “cannot be subclassed.”
+
+Because these intents are mutually exclusive, Java forbids combining them.
+
+
+
+## Q.71: What is a final class?
+A **final class** is a class that **cannot be subclassed**.
+
+Key characteristics:
+
+1. **Prevents inheritance**
+   No other class can extend it.
+
+2. **Used for immutability and security**
+   Helps prevent modification of behavior through subclassing.
+
+3. **Common examples**
+   `String`, `Integer`, `LocalDate`, `Math`.
+
+4. **When to use**
+
+   * To create immutable objects.
+   * To avoid unintended extension.
+   * To enforce design guarantees or security constraints.
+
+
+## Q.72: Can an interface have a constructor? Explain.
+No, an interface cannot have a constructor.
+
+**Reasons:**
+
+1. **Interfaces cannot be instantiated.**
+   Constructors exist to initialize instances. Since interfaces cannot create objects directly, constructors are meaningless.
+
+2. **Interfaces do not have instance state.**
+   No instance fields (other than `public static final` constants), so nothing needs initialization.
+
+3. **Implementation responsibility lies with classes.**
+   The implementing class provides its own constructor to initialize its state.
+
+4. **Interfaces define behavior, not instantiation.**
+   They represent a contract, not an object lifecycle.
+
+Compiler rule:
+Any attempt to declare a constructor inside an interface results in a compile-time error.
+
+
+
+## Q.73: Does == always compare references in Java? When can it behave unexpectedly?
+`==` does **not** always compare object references. It behaves differently depending on the operand types.
+
+**1. For primitives:**
+`==` compares **values**, not references.
+
+```java
+int a = 10;
+int b = 10;
+a == b; // true
+```
+
+**2. For objects:**
+`==` compares **references** (i.e., memory addresses).
+
+---
+
+### When `==` behaves unexpectedly
+
+**1. String interning**
+
+```java
+String s1 = "abc";
+String s2 = "abc";
+s1 == s2; // true (same interned object)
+```
+
+But:
+
+```java
+String s3 = new String("abc");
+s1 == s3; // false
+```
+
+**2. Autoboxing of wrapper types**
+Small integers (−128 to 127), some other values (Boolean, Byte, some Character), and certain cached Long values are cached by the JVM:
+
+```java
+Integer a = 100;
+Integer b = 100;
+a == b; // true (cached)
+```
+
+But:
+
+```java
+Integer x = 200;
+Integer y = 200;
+x == y; // false (not cached)
+```
+
+**3. Comparisons involving null**
+
+```java
+obj == null; // valid, checks for null reference
+```
+
+**4. Mixing primitives and wrapper types**
+`==` unboxes the wrapper:
+
+```java
+Integer a = 10;
+int b = 10;
+a == b; // true, because unboxed to primitive
+```
+
+**Summary:**
+
+* For primitives → compares values.
+* For objects → compares references.
+* Can be misleading due to string interning, autoboxing caches, and unboxing rules.
+
+
+
+## Q.74: What is the output of "hello" == new String("hello") and why?
+The expression:
+
+```java
+"hello" == new String("hello")
+```
+
+**Output:** `false`
+
+**Reason:**
+
+* `"hello"` is a **string literal**, stored in the **string pool**.
+* `new String("hello")` always creates a **new String object** on the heap, even if the same literal exists in the pool.
+* `==` compares **references**, not content.
+
+So the two references point to **different objects**, making the comparison `false`.
+
+
+## Q.75: Why should you override both equals() and hashCode() together?
+You must override **equals()** and **hashCode()** together to maintain the **general contract** required by hash-based collections.
+
+**1. Contract rule:**
+If `a.equals(b)` is `true`, then `a.hashCode() == b.hashCode()` must also be true.
+
+**2. What happens if you override only equals():**
+Objects that are “equal” will produce different hash codes.
+Hash-based collections like `HashMap`, `HashSet`, `LinkedHashMap` will place them in different buckets, causing:
+
+* Duplicate entries in a `HashSet`
+* Inability to retrieve values from a `HashMap`
+* Unpredictable lookup behavior
+
+**3. What happens if you override only hashCode():**
+Objects may collide or be considered equal by the collection even though `equals()` says they are not equal.
+
+**4. Why both are needed:**
+
+* `equals()` defines **logical equality**.
+* `hashCode()` defines **bucket placement** in hash-based structures.
+  Consistency between the two is required for correct behavior.
+
+**Summary:**
+Override both to ensure consistent behavior in hash-based collections and to preserve the equality contract.
+
+
+## Q.76: What happens if you modify a collection while iterating over it?
+Modifying a collection while iterating over it (using an iterator or enhanced for-loop) usually causes a **ConcurrentModificationException**.
+
+**Why:**
+Most collection iterators are **fail-fast**.
+They track a modification count (`modCount`).
+If the collection is structurally modified after the iterator is created, and not through the iterator’s own `remove()` method, the iterator detects the mismatch and throws CME.
+
+**Examples that throw CME:**
+
+```java
+List<Integer> list = new ArrayList<>();
+for (Integer i : list) {
+    list.add(10); // structural modification → CME
+}
+```
+
+**Exceptions (when it does NOT throw CME):**
+
+1. **Using iterator.remove()**
+
+   ```java
+   Iterator<Integer> it = list.iterator();
+   while (it.hasNext()) {
+       if (it.next() == 5) it.remove(); // safe
+   }
+   ```
+
+2. **Using concurrent collections**
+   `ConcurrentHashMap`, `CopyOnWriteArrayList`, `ConcurrentLinkedQueue` use **fail-safe or weakly consistent** iterators that do not throw CME.
+
+3. **Modifying via underlying array in custom structures**
+   Some custom iterators may not use modCount.
+
+**Summary:**
+Regular collections → CME when modified during iteration (except via iterator.remove).
+Concurrent collections → safe, no CME.
+
+
+
+## Q.77: Can you serialize a class that has fields which are not serializable? How?
+Yes, you can serialize a class even if it contains fields that are not serializable.
+
+**Ways to handle non-serializable fields:**
+
+---
+
+### **1. Mark the field as `transient`**
+
+The simplest and most common approach.
+
+```java
+class Person implements Serializable {
+    private String name;
+    private transient Socket socket; // not serializable
+}
+```
+
+`transient` fields are skipped during serialization, so no exception is thrown.
+
+---
+
+### **2. Provide custom serialization using `writeObject()` and `readObject()`**
+
+You manually control what gets serialized.
+
+```java
+private void writeObject(ObjectOutputStream out) throws IOException {
+    out.defaultWriteObject();   // serialize normal fields
+    // skip or manually serialize the non-serializable field
+}
+
+private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    // recreate or set the non-serializable field
+}
+```
+
+Useful when you want to store *some representation* of the non-serializable field.
+
+---
+
+### **3. Use a serializable wrapper for the problematic field**
+
+Example: Convert a non-serializable object to a String, byte array, or custom DTO during serialization, and reconstruct it during deserialization.
+
+---
+
+### **4. Declare the field as `static`**
+
+Static fields are never serialized.
+
+---
+
+### **Summary**
+
+A class containing non-serializable fields *can* be serialized by:
+
+* marking those fields `transient`, or
+* handling them manually via custom `writeObject()`/`readObject()`.
+
+This avoids `NotSerializableException` and allows full control over what gets saved and restored.
+
+
+
+## Q.78: What is the use of `transient` keyword?
+`transient` is used to **exclude a field from Java serialization**.
+
+**When a field is marked `transient`:**
+
+* It is **not written** to the output stream during serialization.
+* During deserialization, it is **restored with a default value** (null, 0, false, etc.).
+
+**Why it's useful:**
+
+1. **Non-serializable fields**
+   Example: `Socket`, `Thread`, `Connection`.
+
+2. **Sensitive data**
+   Passwords, tokens, security keys should not be persisted.
+
+   ```java
+   private transient String password;
+   ```
+
+3. **Derived or cached fields**
+   Values that can be recomputed after deserialization.
+
+4. **Reducing serialized size**
+   Skip fields that aren't needed across serialization boundaries.
+
+**Example:**
+
+```java
+class User implements Serializable {
+    private String name;
+    private transient int age; // will not be serialized
+}
+```
+
+`transient` gives fine-grained control over what part of an object should be persisted.
+
+
+## Q.79: What is the use of `Serializable`?
+`Serializable` enables an object to be **converted into a byte stream** so it can be:
+
+1. **Stored** (file, DB, disk)
+2. **Transferred over a network**
+3. **Reconstructed later** (deserialization)
+
+Use cases:
+
+* Saving application state
+* Sending objects in distributed systems (RMI, sockets)
+* HTTP session replication in servers
+* Caching frameworks that serialize objects
+* Deep copying through serialize → deserialize trick
+
+It’s a **marker interface**, so its presence simply tells the JVM:
+“This class can be serialized.”
+
+
+## Q.80: How does ConcurrentHashMap achieve thread safety without locking the entire map?
+**ConcurrentHashMap achieves thread-safety without locking the entire map using a combination of fine-grained locking and lock-free (CAS-based) operations.**
+
+---
+
+### **1. Fine-Grained Locking (Bucket-Level Locking)**
+
+Instead of locking the entire map, ConcurrentHashMap only locks **a specific bucket (bin)** involved in an update.
+
+* Two threads updating different bins can run **completely in parallel**.
+* This massively improves throughput compared to synchronized HashMap (which uses a single global lock).
+
+---
+
+### **2. CAS (Compare-And-Set) for Lock-Free Reads/Writes**
+
+For operations like:
+
+* Reading a value
+* Inserting into an empty bin
+* Updating a non-contended bin
+
+The map uses **CAS instructions**, which are atomic CPU operations.
+
+CAS allows thread-safe updates **without blocking**.
+
+Example internal logic:
+
+```
+if (bin is empty) try CAS to insert node
+if CAS succeeds → no locking needed
+if CAS fails → fallback to locking
+```
+
+---
+
+### **3. Synchronized Only on Specific Bins (When Needed)**
+
+If a bin has contention or needs structural modification (like resizing or treeification), the map synchronizes **only that bin**.
+
+This means:
+
+* Only threads accessing the same bin block each other.
+* Threads accessing other bins proceed freely.
+
+---
+
+### **4. Read Operations Are Mostly Lock-Free**
+
+Reads do not acquire any locks:
+
+* They directly read from volatile fields ensuring visibility.
+* Concurrent writes do not invalidate the read path.
+
+This makes ConcurrentHashMap extremely fast for read-heavy workloads.
+
+---
+
+### **5. Tree Bins (Java 8+) Reduce Contention**
+
+When a bucket becomes too large, it is converted into a **red-black tree**.
+
+Benefits:
+
+* Faster lookups under high hash collisions
+* Fewer threads competing for the same bin
+
+---
+
+### **6. Segmentation Removed in Java 8**
+
+Java 7 used lock striping via segments.
+Java 8 improved this by removing segments and using per-bin locks + CAS, increasing concurrency further.
+
+---
+
+### **Summary: How Thread Safety is Achieved**
+
+* **Fine-grained locking only on individual bins**
+* **Lock-free reads**
+* **CAS for most writes**
+* **No global lock**
+* **Tree bins reduce hotspots**
+
+Together, these allow ConcurrentHashMap to provide **high throughput, low contention, and thread safety** without locking the entire map.
+
+
+### Q.81: Why do Java's standard collections (ArrayList, HashMap) throw ConcurrentModificationException?
+Java’s standard collections like **ArrayList** and **HashMap** throw **ConcurrentModificationException (CME)** because they are designed to be **fail-fast** when detecting unsafe concurrent modification.
+
+This protects you from **undefined behavior**, inconsistent states, and very hard-to-debug errors.
+
+---
+
+### **Why they throw ConcurrentModificationException (CME)**
+
+#### **1. To prevent unpredictable behavior during iteration**
+
+If a collection is modified structurally (add/remove) while another thread is iterating over it, the iterator’s internal state becomes invalid.
+
+Without CME, you could get:
+
+* missed elements
+* duplicate processing
+* infinite loops
+* crashes or corrupted data
+
+Fail-fast behavior makes the error **visible and immediate**.
+
+---
+
+#### **2. Iterators are designed with a modification count (modCount)**
+
+Internally, collections maintain a `modCount`:
+
+* Each structural modification increments it.
+* Every iterator stores the `expectedModCount` at creation.
+* On each iteration step, iterator checks:
+
+```
+if (expectedModCount != modCount) → throw CME
+```
+
+This makes concurrent unsynchronized updates detectable.
+
+---
+
+#### **3. They are NOT designed for thread-safe concurrent modifications**
+
+Standard collections are optimized for:
+
+* fast, single-threaded performance
+* no unnecessary locking
+
+Allowing safe concurrent modification would require:
+
+* locks on every operation, or
+* complex concurrent algorithms
+
+Both would hurt performance for typical use cases.
+
+So Java provides **ConcurrentHashMap**, **CopyOnWriteArrayList**, and other concurrent collections for multi-threaded cases.
+
+---
+
+#### **4. Fail-fast design forces developers to use proper concurrency mechanisms**
+
+Instead of silently allowing dangerous operations, Java makes you aware of the issue via CME so you can use:
+
+* synchronized blocks
+* concurrent collections
+* iterator.remove()
+* or specialized thread-safe patterns
+
+Fail-fast is a debugging aid.
+
+---
+
+### **Key Idea**
+
+**ConcurrentModificationException is not about preventing modification; it's about preventing *unsafe and inconsistent* modification while iterating.**
+
+---
+
+### **Summary**
+
+| Reason                                  | Explanation                                         |
+| --------------------------------------- | --------------------------------------------------- |
+| Prevent inconsistent iteration          | Avoids undefined behavior during traversal          |
+| Detects unexpected concurrent mutation  | modCount mismatch triggers CME                      |
+| Avoids performance overhead             | No built-in locking, so not thread-safe             |
+| Encourages correct concurrency handling | Developer must choose proper thread-safe collection |
+
+Standard collections are **not built for concurrency**.
+Fail-fast CME is a **safety feature** to catch mistakes early.
+
+
+
+## Q.82: How do fail-safe iterators avoid this exception, and which collections use them?
+**Fail-safe iterators avoid ConcurrentModificationException by iterating over a *snapshot* of the collection instead of the actual data structure.**
+So even if the underlying collection is modified during iteration, the iterator is unaffected.
+
+---
+
+**How Fail-Safe Iterators Work**
+
+### **1. They operate on a cloned / snapshot copy**
+
+Fail-safe iterators read from a **separate copy** of the collection's data.
+
+Meaning:
+
+* The original collection **can be modified safely**.
+* The iterator sees the **old state**, not the updated one.
+
+Example mechanism:
+
+* **CopyOnWriteArrayList** → creates a new array on every write.
+* **ConcurrentHashMap** → weakly consistent iteration (not a full copy, but a non-blocking view).
+
+---
+
+### **2. No modCount check**
+
+Fail-fast collections use `modCount` to detect changes, but fail-safe iterators **ignore modification count**.
+
+Hence, **no ConcurrentModificationException**.
+
+---
+
+### **3. They provide *weakly consistent* views**
+
+During iteration:
+
+* They may or may not reflect new changes.
+* They **never throw CME**.
+* They never return corrupted or partially updated data.
+
+---
+
+**Collections That Use Fail-Safe Iterators**
+
+### **1. `ConcurrentHashMap`**
+
+* Iterators are **weakly consistent**:
+
+  * Reflect some, all, or none of the changes.
+  * Never throw CME.
+
+---
+
+### **2. `CopyOnWriteArrayList` and `CopyOnWriteArraySet`**
+
+* Iterators iterate over a **snapshot of the array**.
+* Any modification creates a new copy.
+* Designed for read-heavy workloads.
+
+---
+
+### **3. Concurrent Collections in `java.util.concurrent` package**
+
+These all use fail-safe or weakly consistent iterators:
+
+* `ConcurrentHashMap`
+* `ConcurrentSkipListMap`
+* `ConcurrentSkipListSet`
+* `ConcurrentLinkedQueue`
+* `ConcurrentLinkedDeque`
+* `CopyOnWriteArrayList`
+* `CopyOnWriteArraySet`
+* `LinkedBlockingQueue`
+* `ArrayBlockingQueue`
+* `PriorityBlockingQueue`
+* `DelayQueue`
+* `SynchronousQueue`
+
+---
+
+**Important Differences**
+
+| Feature                 | Fail-Fast Iterator (ArrayList, HashMap) | Fail-Safe Iterator (ConcurrentHashMap, CopyOnWriteList) |
+| ----------------------- | --------------------------------------- | ------------------------------------------------------- |
+| Iterates over           | Actual collection                       | Snapshot / concurrent structure                         |
+| CME thrown?             | Yes                                     | No                                                      |
+| Reflects modifications? | No — throws CME                         | Maybe (weakly consistent)                               |
+| Thread safety           | Not thread-safe                         | Thread-safe                                             |
+
+---
+
+**Summary**
+
+**Fail-safe iterators avoid ConcurrentModificationException because they iterate over a snapshot or a concurrent structure rather than the actual collection.**
+They are used in **concurrent collections** like ConcurrentHashMap and CopyOnWriteArrayList.
+
+
+
+## Q.83: What is the difference between TreeSet, HashSet, and LinkedHashSet in terms of ordering and performance?
+### **Difference Between TreeSet, HashSet, and LinkedHashSet (Ordering + Performance)**
+
+---
+
+**1. Ordering Behavior**
+
+**✔ HashSet**
+
+* **No ordering guaranteed.**
+* Order of elements is **unpredictable** and may change after rehashing.
+* Uses hashing → purely based on hashCode.
+
+---
+
+**✔ LinkedHashSet**
+
+* **Maintains insertion order.**
+* Elements appear in the same order you insert them.
+* Uses a HashSet + doubly linked list.
+
+---
+
+**✔ TreeSet**
+
+* **Sorted order (natural or custom Comparator).**
+* Implements **NavigableSet**.
+* Uses Red-Black Tree under the hood.
+
+Examples:
+
+* Strings → alphabetical order
+* Integers → ascending order
+
+---
+
+**2. Performance (Big-O) Comparison**
+
+| Operation           | HashSet      | LinkedHashSet                      | TreeSet                     |
+| ------------------- | ------------ | ---------------------------------- | --------------------------- |
+| **add()**           | O(1) average | O(1) average                       | O(log n)                    |
+| **contains()**      | O(1) average | O(1) average                       | O(log n)                    |
+| **remove()**        | O(1) average | O(1) average                       | O(log n)                    |
+| **iteration speed** | Fast         | Fastest (due to predictable order) | Moderate (sorted traversal) |
+
+---
+
+**3. Internal Data Structure**
+
+| Set Type          | Internal Structure           |
+| ----------------- | ---------------------------- |
+| **HashSet**       | HashMap buckets (hash table) |
+| **LinkedHashSet** | HashMap + doubly linked list |
+| **TreeSet**       | Red-Black Tree               |
+
+---
+
+**4. Null Handling**
+
+* **HashSet**: Allows `null`
+* **LinkedHashSet**: Allows `null`
+* **TreeSet**: `null` **not allowed** in Java 8+ (throws NPE during comparison)
+
+---
+
+**5. Use Cases**
+
+**HashSet**
+
+* When you just need a set with **high performance** and **don’t care about order**.
+
+**LinkedHashSet**
+
+* When you need:
+
+  * predictable **insertion order**
+  * HashSet-like performance
+
+**TreeSet**
+
+* When you need:
+
+  * **sorted** elements
+  * range queries (higher, lower, ceiling, floor)
+  * tailSet, headSet, subSet operations
+
+---
+
+**Summary Table**
+
+| Feature            | HashSet    | LinkedHashSet            | TreeSet        |
+| ------------------ | ---------- | ------------------------ | -------------- |
+| Ordering           | None       | Insertion order          | Sorted order   |
+| Performance        | O(1) ops   | O(1) ops                 | O(log n) ops   |
+| Internal Structure | Hash table | Hash table + linked list | Red-Black Tree |
+| Null allowed?      | Yes        | Yes                      | No (Java 8+)   |
+| Best For           | Speed      | Ordered iteration        | Sorted data    |
+
+---
+
+
+## Q.84: What is the difference between Comparable and Comparator?
+### **1. Purpose**
+
+#### **Comparable**
+
+* Used to define **natural ordering** of objects.
+* Ordering is defined **inside the class itself**.
+
+#### **Comparator**
+
+* Used to define **custom or multiple orderings**.
+* Ordering is defined **outside the class**, in a separate object.
+
+---
+
+### **2. Where the comparison logic lives**
+
+#### **Comparable**
+
+Implemented by the class being compared:
+
+```java
+class Person implements Comparable<Person> {
+    public int compareTo(Person other) { ... }
+}
+```
+
+#### **Comparator**
+
+Implemented by a separate class or via lambda:
+
+```java
+Comparator<Person> byAge = (p1, p2) -> p1.age - p2.age;
+```
+
+---
+
+### **3. Method Signature**
+
+#### **Comparable**
+
+```java
+int compareTo(T o);
+```
+
+#### **Comparator**
+
+```java
+int compare(T o1, T o2);
+```
+
+---
+
+### **4. Number of possible orderings**
+
+#### **Comparable**
+
+* **Only one** natural ordering per class.
+* You cannot have multiple compare logics inside the class.
+
+#### **Comparator**
+
+* **Unlimited** custom orderings possible.
+* Useful when sorting the same objects in different ways.
+
+Example:
+
+```java
+Comparator<Person> byName;
+Comparator<Person> byAge;
+Comparator<Person> bySalary;
+```
+
+---
+
+### **5. When used implicitly**
+
+#### **Comparable**
+
+* Used automatically by sorted structures:
+
+  * `TreeSet`
+  * `TreeMap`
+  * `PriorityQueue` (when no Comparator provided)
+  * `Collections.sort()`, `Arrays.sort()`
+
+#### **Comparator**
+
+* Used when provided explicitly:
+
+  * `new TreeSet<>(comparator)`
+  * `new PriorityQueue<>(comparator)`
+  * `Collections.sort(list, comparator)`
+
+---
+
+### **6. Modification requirement**
+
+#### **Comparable**
+
+* Requires modifying the class.
+* Not possible for classes you cannot change (e.g., third-party classes).
+
+#### **Comparator**
+
+* Does **not** require modifying the class.
+* Works even with classes you don't control.
+
+---
+
+### **7. Usage Examples**
+
+#### **Comparable Example**
+
+```java
+public class Employee implements Comparable<Employee> {
+    int id;
+    public int compareTo(Employee e) {
+        return this.id - e.id;
+    }
+}
+```
+
+#### **Comparator Example**
+
+```java
+Comparator<Employee> byName = Comparator.comparing(e -> e.name);
+```
+
+---
+
+### **Summary Table**
+
+| Feature                  | Comparable               | Comparator                             |
+| ------------------------ | ------------------------ | -------------------------------------- |
+| Package                  | java.lang                | java.util                              |
+| Method                   | compareTo()              | compare()                              |
+| Ordering type            | Natural                  | Custom / multiple                      |
+| Where logic lives        | Inside class             | Outside class                          |
+| Modifies original class? | Yes                      | No                                     |
+| Number of orderings      | Only one                 | Many                                   |
+| Used by                  | TreeSet, TreeMap, sort() | TreeSet, TreeMap, sort() when provided |
+
+---
+
+### **One-line summary**
+
+**Comparable = natural ordering, inside the class.
+Comparator = custom ordering, outside the class.**
+
+
+
+## Q.85: What happens if elements do not implement Comparable and no Comparator is provided?
+If elements **do not implement Comparable** *and* **no Comparator is provided**, then any sorted collection or sorted operation that requires ordering will **fail at runtime**.
+
+Specifically, collections like:
+
+* **TreeSet**
+* **TreeMap**
+* **PriorityQueue** (sometimes, depending on operations)
+* **Collections.sort()**
+* **Arrays.sort()**
+
+all require a way to compare elements.
+
+---
+
+**What exactly happens?**
+
+### **You get a `ClassCastException` at runtime.**
+
+Example:
+
+```java
+TreeSet<Object> set = new TreeSet<>();
+set.add(new Object()); // boom → ClassCastException
+```
+
+Error:
+
+```
+java.lang.ClassCastException: class java.lang.Object cannot be cast to java.lang.Comparable
+```
+
+Because TreeSet internally tries:
+
+```java
+((Comparable) element1).compareTo(element2)
+```
+
+and the cast fails.
+
+---
+
+**Why does this happen?**
+
+### **Sorted collections require a comparison strategy.**
+
+They must know:
+
+* how to order elements
+* how to detect duplicates based on ordering
+* how to navigate the tree or heap correctly
+
+Without Comparable or Comparator:
+
+* the JVM cannot determine ordering
+* insertion into the structure becomes impossible
+
+Thus it throws an exception instead of silently producing incorrect behavior.
+
+---
+
+**Which collections require comparability?**
+
+### **1. TreeSet**
+
+Always requires elements to be comparable.
+
+### **2. TreeMap**
+
+Requires keys to be comparable.
+
+### **3. PriorityQueue**
+
+If operations that require comparison are used (offer/poll), and no comparator was provided, the queue expects elements to implement Comparable.
+Otherwise → ClassCastException.
+
+### **4. Sorting methods**
+
+* `Collections.sort(list)`
+* `Arrays.sort(array)`
+  Both require elements to be comparable unless a custom Comparator is provided.
+
+---
+
+**How to fix it?**
+
+### **Option 1: Make the class implement `Comparable<T>`**
+
+```java
+class Person implements Comparable<Person> {
+    int age;
+    public int compareTo(Person o) {
+        return Integer.compare(this.age, o.age);
+    }
+}
+```
+
+### **Option 2: Provide a custom `Comparator`**
+
+```java
+TreeSet<Person> set = new TreeSet<>(Comparator.comparing(p -> p.age));
+```
+
+---
+
+**Summary**
+
+| Element Comparable? | Comparator Provided? | Result                                  |
+| ------------------- | -------------------- | --------------------------------------- |
+| No                  | No                   | **ClassCastException**                  |
+| Yes                 | No                   | Works                                   |
+| No                  | Yes                  | Works                                   |
+| Yes                 | Yes                  | Works (Comparator overrides Comparable) |
+
+---
+
+**Final takeaway:**
+**Sorted collections need a defined ordering—without Comparable or a Comparator, they throw ClassCastException.**
+
+
+
+## Q.86: Why does Java recommend writing Comparators using Comparator.comparing() instead of subtraction like a.age - b.age?
+Java recommends using **`Comparator.comparing()`** (or methods like `Integer.compare()`) instead of subtraction (`a.age - b.age`) because subtraction can be **incorrect, unsafe, and overflow-prone**.
+
+---
+
+**1. Subtraction can cause integer overflow**
+
+Example:
+
+```java
+int x = Integer.MAX_VALUE;
+int y = -10;
+return x - y;   // overflow!
+```
+
+This may produce a value that reverses ordering or breaks comparator consistency.
+
+`Comparator.comparing()` and `Integer.compare()` avoid this problem entirely.
+
+---
+
+**2. Subtraction breaks comparator correctness rules**
+
+A comparator must obey:
+
+* **antisymmetry**
+* **transitivity**
+* **consistency**
+
+Overflow breaks these rules and can lead to:
+
+* corrupted TreeMap / TreeSet
+* missed or duplicated values
+* infinite loops during sorting
+
+---
+
+**3. Subtraction does not work for non-integers**
+
+For example, comparing long, floating types, BigInteger, LocalDate, String, etc.
+
+`Comparator.comparing()` works for any type.
+
+---
+
+**4. Comparator.comparing() improves readability**
+
+Compare:
+
+```java
+Comparator<Person> c = (a, b) -> a.age - b.age;
+```
+
+vs.
+
+```java
+Comparator<Person> c = Comparator.comparingInt(p -> p.age);
+```
+
+The second one clearly conveys intent and is more maintainable.
+
+---
+
+**5. Comparator.comparing() handles nulls safely**
+
+Using helper methods:
+
+```java
+Comparator.comparing(Person::getAge, Comparator.nullsLast(...))
+```
+
+Subtraction cannot handle nulls at all.
+
+---
+
+**6. Comparator.comparing() allows easy composition**
+
+```java
+Comparator<Person> comp =
+    Comparator.comparing(Person::getAge)
+              .thenComparing(Person::getName);
+```
+
+Subtraction cannot support multi-level sorting.
+
+---
+
+**7. Official Java recommendation**
+
+Effective Java Item 14: *"Consider implementing Comparable via Comparator construction methods."*
+Joshua Bloch strongly discourages subtraction-based comparators.
+
+---
+
+**Summary Table**
+
+| Method                                 | Problems                                                 |
+| -------------------------------------- | -------------------------------------------------------- |
+| `a.age - b.age`                        | Overflow, incorrect ordering, limited to int, unreadable |
+| `Integer.compare(a.age, b.age)`        | Safe, correct, readable                                  |
+| `Comparator.comparing(Person::getAge)` | Best practice, flexible, composable, null-friendly       |
+
+---
+
+**Final Summary**
+
+**Subtraction-based comparison is unsafe and can break sorting and tree-based collections.
+`Comparator.comparing()` is safe, readable, and the modern recommended approach.**
+
+
+
+## Q.87: When to use Comparable and when to use Comparator?
+### **When to Use Comparable vs Comparator**
+
+---
+
+**Use Comparable when:**
+
+### **1. The class has a *natural* or default ordering**
+
+Examples:
+
+* Integer → ascending value
+* String → alphabetical
+* LocalDate → chronological
+
+If there is one obvious, standard way the objects should be ordered, implement Comparable.
+
+### **2. You control the class's source code**
+
+Because Comparable requires modifying the class:
+
+```java
+class Person implements Comparable<Person> {
+    public int compareTo(Person other) { ... }
+}
+```
+
+### **3. You need the class to work naturally with sorted collections**
+
+Such as:
+
+* TreeSet
+* TreeMap
+* PriorityQueue
+* Arrays.sort(), Collections.sort()
+
+---
+
+**Use Comparator when:**
+
+### **1. You need *multiple different* ways to sort the same objects**
+
+Example: sorting employees by:
+
+* name
+* age
+* salary
+* joining date
+
+```java
+Comparator<Employee> byAge = Comparator.comparingInt(Employee::getAge);
+Comparator<Employee> byName = Comparator.comparing(Employee::getName);
+```
+
+Comparable cannot support multiple sort orders.
+
+---
+
+### **2. You cannot modify the class**
+
+If it's from a library (e.g., `File`, `BigDecimal`) or owned by another team.
+
+```java
+Comparator<File> bySize = Comparator.comparingLong(File::length);
+```
+
+---
+
+### **3. You want custom ordering for a particular use case**
+
+Example:
+
+* Reverse order
+* Case-insensitive sort
+* Sort nulls first / last
+* Sort by multiple fields
+
+```java
+students.sort(
+    Comparator.comparing(Student::getGrade)
+              .thenComparing(Student::getName)
+);
+```
+
+---
+
+### **4. You need ordering only temporarily**
+
+Comparator lets you sort *just for this operation*, without modifying the class.
+
+---
+
+**Summary Table**
+
+| Use Case                       | Comparable   | Comparator   |
+| ------------------------------ | ------------ | ------------ |
+| Defines natural ordering       | ✔            | ✘            |
+| Multiple sorting strategies    | ✘            | ✔            |
+| Modify the class?              | Required     | Not required |
+| Sorting third-party classes    | Not possible | Possible     |
+| Local/temporary sorting        | Not ideal    | Perfect      |
+| Can override natural ordering? | No           | Yes          |
+
+---
+
+**One-Line Summary**
+
+**Use Comparable when an object has one natural ordering.
+Use Comparator when you need multiple or custom orderings.**
+
+
+
+## Q.88: What is the difference between Iterator.remove() and Collection.remove() while iterating?
+### **Difference Between `Iterator.remove()` and `Collection.remove()` While Iterating**
+
+This is a very important interview question because it explains **why ConcurrentModificationException happens** and how to avoid it.
+
+---
+
+✅ **1. Iterator.remove() — SAFE removal**
+
+`Iterator.remove()` is the **only safe way** to remove elements while iterating a collection using an iterator.
+
+Example:
+
+```java
+Iterator<Integer> it = list.iterator();
+while (it.hasNext()) {
+    if (it.next() == 5) {
+        it.remove(); // SAFE
+    }
+}
+```
+
+### Why is it safe?
+
+* It removes the element **through the iterator itself**.
+* It updates the iterator’s internal state (`expectedModCount`) to match the collection’s `modCount`.
+* Therefore, **no ConcurrentModificationException**.
+
+---
+
+❌ **2. Collection.remove() — UNSAFE during iteration**
+
+Calling `list.remove()` or `set.remove()` while iterating causes **ConcurrentModificationException**.
+
+Example:
+
+```java
+for (Integer i : list) {
+    if (i == 5) {
+        list.remove(i); // UNSAFE → ConcurrentModificationException
+    }
+}
+```
+
+### Why is it unsafe?
+
+* `Collection.remove()` changes the collection directly.
+* It increments `modCount`.
+* But the iterator’s `expectedModCount` is *not updated*.
+* On next iteration step, mismatch occurs → **CME**
+
+---
+
+🔥 Key Difference (Interview Answer)
+
+| Operation               | Safe? | Why                                                                 |
+| ----------------------- | ----- | ------------------------------------------------------------------- |
+| **Iterator.remove()**   | ✔ Yes | Synchronizes changes with iterator state (updates expectedModCount) |
+| **Collection.remove()** | ✘ No  | Modifies underlying collection without iterator’s knowledge → CME   |
+
+---
+
+🧠 Why Java designed it this way?
+
+* Iterator enforces fail-fast behavior to prevent undefined behavior.
+* Removing elements behind the iterator’s back corrupts its internal state.
+* So Java forces you to use the iterator's own method for correctness.
+
+---
+
+⚠ Additional Rules for Iterator.remove()
+
+### You must call `next()` *before* remove()
+
+This is illegal and throws `IllegalStateException`:
+
+```java
+Iterator<Integer> it = list.iterator();
+it.remove(); // ❌ Illegal
+```
+
+### You cannot call remove() twice consecutively without next()
+
+```java
+it.next();
+it.remove(); // OK
+it.remove(); // ❌ IllegalStateException
+```
+
+---
+
+📝 Special Case: Concurrent Collections
+
+In collections like:
+
+* `ConcurrentHashMap`
+* `CopyOnWriteArrayList`
+
+You can safely modify collection while iterating, because iterators are **fail-safe** or **weakly consistent**, not fail-fast.
+
+---
+
+📌 Final Summary
+
+* **Use `Iterator.remove()` when removing elements during iteration** → safe
+* **Never use `Collection.remove()` while iterating** → causes ConcurrentModificationException
+* Iterator.remove() keeps both the iterator and the collection in a consistent state.
+
+
+## Q.89: What is the difference between compareTo() returning 0 vs equals() returning true?
+### **Difference Between `compareTo() == 0` and `equals() == true`**
+
+This is a subtle but very important Java interview question.
+
+---
+
+✅ **1. `equals()` defines *object equality***
+
+`equals()` answers the question:
+
+> **Are these two objects logically equal?**
+
+If `equals()` returns `true`:
+
+* The two objects are considered the **same** logically.
+* HashSet, HashMap, HashTable use it to check duplicates or key equality.
+
+### Example:
+
+```java
+p1.equals(p2) == true
+```
+
+→ p1 and p2 are equal as per your business logic.
+
+---
+
+✅ **2. `compareTo() == 0` defines *ordering equality***
+
+`compareTo()` answers a different question:
+
+> **Are these two objects equal in *ordering*?**
+
+Returning `0` means:
+
+* They are considered **equal for sorting purposes**.
+* Not necessarily logically equal.
+
+### Example:
+
+```java
+p1.compareTo(p2) == 0
+```
+
+→ p1 and p2 are equal **in sorted order**.
+
+---
+
+🔥 **Key Insight**
+
+### **Objects can be “ordering-equal” but NOT “logically-equal.”**
+
+For example:
+
+```java
+Person p1 = new Person("Alice", 25);
+Person p2 = new Person("Bob", 25);
+```
+
+If compareTo() compares only age:
+
+```java
+p1.compareTo(p2) == 0   // both age 25
+```
+
+But:
+
+```java
+p1.equals(p2) == false  // names differ, so not equal
+```
+
+---
+
+⚠ Why does this matter?
+
+### **1. TreeSet / TreeMap rely on compareTo(), not equals()**
+
+So TreeSet may treat objects as duplicates even if equals() says they are different!
+
+Example:
+
+* If compareTo returns 0 for two distinct objects, TreeSet stores only one of them.
+
+---
+
+### **2. HashSet / HashMap rely on equals() and hashCode()**
+
+So HashSet considers them different if equals() says they’re different — regardless of compareTo().
+
+---
+
+🧠 **3. compareTo() and equals() do NOT need to be consistent**
+
+But **if they are used in sorted collections**, they *should be*.
+
+Consistency rule (recommended):
+
+> If `a.equals(b)` is true, then `a.compareTo(b)` should be 0.
+
+This avoids weird bugs in TreeSet and TreeMap.
+
+---
+
+📌 Summary Table
+
+| Aspect                    | equals()                    | compareTo()                  |
+| ------------------------- | --------------------------- | ---------------------------- |
+| Purpose                   | Logical equality            | Ordering comparison          |
+| Return value significance | true → objects are equal    | 0 → objects have same order  |
+| Used by                   | HashSet, HashMap, HashTable | TreeSet, TreeMap, sorting    |
+| Must be consistent?       | Yes, with hashCode          | Only recommended with equals |
+| Can differ?               | Yes                         | Yes                          |
+
+---
+
+🎯 Final Interview-Friendly Summary
+
+* **equals() true** → objects are logically identical.
+* **compareTo() == 0** → objects are equal *only in ordering*, not necessarily logically identical.
+* Sorted collections use compareTo(); hashed collections use equals().
+* For correctness, if two objects are equal, compareTo() should return 0.
+
+
+## Q.90: Explain fail-fast vs fail-safe iterators with examples of classes that use each.
+**Fail-fast iterators**
+
+* Immediately throw `ConcurrentModificationException` if the collection is structurally modified while iterating (except through the iterator’s own methods).
+* They work on the original collection directly and detect modification using a mod-count check.
+
+Examples:
+
+* `ArrayList`
+* `HashMap`
+* `HashSet`
+* `LinkedList`
+
+Behavior:
+
+```
+List<Integer> list = new ArrayList<>();
+for (Integer i : list) {
+    list.add(10); // throws ConcurrentModificationException
+}
+```
+
+**Fail-safe iterators**
+
+* Do **not** throw exceptions on concurrent modifications.
+* They iterate over a **copy** of the collection, so structural changes do not affect the iteration.
+* Modifications are not reflected in the iteration.
+
+Examples (from `java.util.concurrent`):
+
+* `CopyOnWriteArrayList`
+* `ConcurrentHashMap`
+
+Behavior:
+
+```
+CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
+for (Integer i : list) {
+    list.add(10); // allowed; iterator uses a separate copy
+}
+```
+
+Difference:
+
+* Fail-fast → works on original structure, detects modification, throws exception.
+* Fail-safe → works on a snapshot/copy, no exception, but changes are not visible during iteration.
+
+
+## Q.91: Explain the internal working difference between HashMap, Collections.synchronizedMap, and ConcurrentHashMap.
+**HashMap**
+
+* Not thread-safe.
+* Internally uses an array of buckets.
+* Each bucket holds a linked list or a balanced tree (red-black tree since Java 8) when collisions increase.
+* No locking; concurrent access can cause data corruption or infinite loops.
+* Fastest in single-threaded scenarios.
+
+**Collections.synchronizedMap**
+
+* Wraps a map (usually `HashMap`) with synchronized methods.
+* Uses a **single intrinsic lock** on the entire map.
+* Only one thread can access any method at a time.
+* Iteration requires external synchronization.
+* Thread-safe but poor scalability under contention.
+
+**ConcurrentHashMap**
+
+* Thread-safe and highly scalable.
+* Uses **fine-grained locking**:
+
+  * Java 7: segment-level locking.
+  * Java 8+: bucket-level locking with CAS and synchronized blocks.
+* Read operations are mostly lock-free.
+* Iterators are **weakly consistent**, not fail-fast.
+* No global lock, so multiple threads can read/write concurrently.
+
+Summary:
+
+* HashMap → no synchronization, fastest, unsafe in concurrency
+* synchronizedMap → full map lock, safe but slow
+* ConcurrentHashMap → fine-grained locking, safe and scalable
+
+
+
+## Q.92: Difference between: Collections.sort(list), list.sort(comparator)?
+**`Collections.sort(list)`**
+
+* Static utility method.
+* Sorts the list using natural ordering or a provided comparator.
+* Internally delegates to `List.sort()` (since Java 8).
+* Works for any mutable `List`.
+
+**`list.sort(comparator)`**
+
+* Instance method on `List` (Java 8+).
+* Sorts the list using the given comparator.
+* More object-oriented and preferred in modern Java.
+
+Difference:
+
+* Utility method vs instance method.
+* `Collections.sort(list)` exists for backward compatibility.
+* `list.sort()` is the modern, clearer API.
+
+
+
+## Q.93: Why we throw `ConcurrentModificationException` if a collection is structurally modified? What purpose does it serve?
+`ConcurrentModificationException` is thrown to **fail fast** and detect unsafe or unintended concurrent structural changes during iteration.
+
+Purpose:
+
+* Prevents unpredictable behavior such as skipped elements, infinite loops, or corrupted state.
+* Immediately signals a programming error instead of allowing silent data corruption.
+* Enforces the rule that a collection should not be structurally modified while being iterated, except via the iterator’s own methods.
+
+It is a **debugging aid**, not a concurrency guarantee. The exception helps developers catch incorrect modification logic early rather than dealing with subtle, hard-to-trace bugs later.
+
+
+
+## Q.94: What problem does Iterator solve that a normal for loop does not?
+An `Iterator` decouples **traversal logic** from the collection’s **internal structure**.
+
+Problems with a normal for loop:
+
+* Requires knowledge of how the collection is indexed or structured.
+* Works only for index-based collections (`List`), not for `Set`, `Map`, or custom collections.
+* Cannot safely remove elements during traversal.
+
+What `Iterator` solves:
+
+* Provides a **uniform way** to traverse any collection.
+* Hides internal representation (array, list, tree, hash table).
+* Allows **safe removal** during iteration via `iterator.remove()`.
+* Enables polymorphic traversal across different collection types.
+
+Iterator abstracts iteration, while a for loop is tied to structure and indexing.
+
+
+
+## Q.95: Why does Java’s Iterator support remove() but not add()?
+`Iterator` supports `remove()` but not `add()` to keep iteration **safe, simple, and predictable**.
+
+Reasons:
+
+* Removing the current element does not disrupt the iterator’s traversal state.
+* Adding elements during iteration can change the collection’s structure in ways that break traversal order, cause infinite loops, or skip elements.
+* `Iterator` is designed for **one-directional traversal**, not structural growth.
+
+For collections that need insertion during traversal, Java provides:
+
+* `ListIterator`, which supports `add()` and `set()` because it maintains a richer cursor state.
+
+Design intent:
+
+* `Iterator` → minimal, safe traversal + removal
+* `ListIterator` → bidirectional traversal + modification
+
+
+## Q.96: Explain fail-fast behavior in iterators. Is it guaranteed in Java?
+Fail-fast behavior means an iterator throws `ConcurrentModificationException` when it detects that the underlying collection has been structurally modified during iteration (outside of the iterator’s own methods).
+
+How it works:
+
+* Collections maintain an internal modification count (`modCount`).
+* The iterator stores the expected value.
+* On each `next()` / `hasNext()`, the iterator compares both.
+* If they differ, `ConcurrentModificationException` is thrown.
+
+Guarantee:
+
+* Fail-fast behavior is **not guaranteed**.
+* It is a **best-effort mechanism**, mainly for debugging.
+* The exception may or may not be thrown in concurrent modification scenarios.
+
+Java documentation explicitly states that this behavior should not be relied upon for correctness in multi-threaded code.
+
+
+
+## Q.97: What is a Java Stream? How is it different from a Collection?
+A **Java Stream** is a sequence of elements that supports **functional-style operations** (filter, map, reduce) to process data declaratively.
+
+Difference from a Collection:
+
+* **Purpose**
+
+  * Collection → stores data
+  * Stream → processes data
+
+* **Data storage**
+
+  * Collection → holds elements in memory
+  * Stream → does not store elements; it operates on a data source
+
+* **Traversal**
+
+  * Collection → can be traversed multiple times
+  * Stream → can be consumed only once
+
+* **Evaluation**
+
+  * Collection → operations are eager
+  * Stream → operations are lazy and executed only on a terminal operation
+
+* **Modification**
+
+  * Collection → supports adding/removing elements
+  * Stream → immutable; does not modify the source
+
+Stream focuses on *how to process*, Collection focuses on *where data lives*.
+
+
+## Q.98: Explain the difference between intermediate and terminal operations with examples.
+**Intermediate operations**
+
+* Transform a stream into another stream.
+* Are **lazy**; they do not execute immediately.
+* Can be chained.
+* Execute only when a terminal operation is invoked.
+
+Examples:
+
+```
+stream.filter(x -> x > 10)
+      .map(x -> x * 2);
+```
+
+Common intermediate operations:
+
+* `filter`
+* `map`
+* `flatMap`
+* `sorted`
+* `distinct`
+* `limit`
+
+**Terminal operations**
+
+* Trigger stream execution.
+* Produce a result or side effect.
+* Consume the stream; it cannot be reused.
+
+Examples:
+
+```
+stream.filter(x -> x > 10)
+      .map(x -> x * 2)
+      .collect(Collectors.toList());
+```
+
+Common terminal operations:
+
+* `forEach`
+* `collect`
+* `reduce`
+* `findFirst`
+* `count`
+
+Key difference:
+
+* Intermediate → lazy, returns Stream
+* Terminal → eager, returns result or void
+
+
+## Q.99: What does lazy evaluation mean in streams? Why is it beneficial?
+Lazy evaluation in streams means intermediate operations are **not executed immediately**. They are only evaluated when a terminal operation is invoked, and only as much as required to produce the final result.
+
+Benefits:
+
+* **Performance**: avoids unnecessary computations.
+* **Short-circuiting**: operations like `findFirst`, `anyMatch`, or `limit` stop processing early.
+* **Optimization**: the stream pipeline can fuse multiple operations into a single pass.
+* **Efficiency**: processes only required elements instead of the entire data set.
+
+Example:
+
+```
+list.stream()
+    .filter(x -> x > 10)
+    .map(x -> x * 2)
+    .findFirst();
+```
+
+Processing stops as soon as the first matching element is found.
+
+
+
+## Q.100: What will be the output of this program?
+```
+import java.util.*;
+
+public class Test {
+    public static void main(String[] args) {
+        List<Integer> list = List.of(1, 2, 3, 4);
+
+        list.stream()
+            .filter(x -> {
+                System.out.print("F" + x + " ");
+                return x % 2 == 0;
+            })
+            .map(x -> {
+                System.out.print("M" + x + " ");
+                return x * 2;
+            })
+            .findFirst();
+
+    }
+}
+```
+
+Output:
+
+```
+F1 F2 M2 
+```
+
+Explanation:
+
+* Streams are lazily evaluated.
+* `findFirst()` is a short-circuiting terminal operation.
+* Processing happens element by element, not stage by stage.
+
+Step-by-step:
+
+1. Element `1`
+
+   * `filter` runs → prints `F1 `
+   * `1` is odd → filtered out
+   * `map` is NOT executed
+2. Element `2`
+
+   * `filter` runs → prints `F2 `
+   * `2` is even → passes filter
+   * `map` runs → prints `M2 `
+   * `findFirst()` gets its first element and stops the stream
+
+Elements `3` and `4` are never processed.
+
+
+
+## Q.101: When would you prefer a traditional loop over streams?
+Prefer a traditional loop when:
+
+* **Simple logic**: A plain loop is clearer than a stream pipeline.
+* **Complex control flow**: Multiple `break`, `continue`, or nested conditions are needed.
+* **Performance-critical hot paths**: Loops avoid lambda overhead and object creation.
+* **Checked exceptions**: Streams do not handle checked exceptions cleanly.
+* **Stateful mutation**: You need to update multiple external variables predictably.
+* **Debugging clarity**: Step-by-step debugging is easier with loops.
+
+Streams are best for declarative, side-effect-free data transformations; loops are better for fine-grained control.
+
+
+## Q.102: What is short-circuiting in streams?
+Short-circuiting in streams means the stream **stops processing further elements as soon as the result is determined**, instead of traversing the entire data source.
+
+Short-circuiting terminal operations:
+
+* `findFirst`
+* `findAny`
+* `anyMatch`
+* `allMatch`
+* `noneMatch`
+
+Short-circuiting intermediate operation:
+
+* `limit`
+
+Example:
+
+```
+list.stream()
+    .filter(x -> x > 10)
+    .findFirst();
+```
+
+Once the first matching element is found, no further elements are processed.
+
+
+
+## Q.103: How does ArrayList resizing works?
+`ArrayList` is backed by a dynamically resizing array.
+
+Resizing mechanism:
+
+* Internally stores elements in an `Object[]`.
+* When adding an element and the array is full, a **new larger array** is created.
+* New capacity is increased by ~**1.5x** of the old capacity:
+
+  ```
+  newCapacity = oldCapacity + (oldCapacity >> 1)
+  ```
+* Existing elements are copied to the new array.
+* Old array becomes eligible for garbage collection.
+
+Key points:
+
+* Initial default capacity is 10 (on first add).
+* `add()` is **amortized O(1)** but resizing itself is **O(n)**.
+* Frequent resizing can be avoided using `ensureCapacity()` or initializing with a capacity.
+
+Trade-off:
+
+* Faster random access.
+* Resizing cost due to array copying.
+
+
+
+## Q.104: Can you explain the Thread lifecycle?
+Java thread lifecycle consists of the following states:
+
+**1. New**
+
+* Thread object is created but `start()` is not called.
+* No execution yet.
+
+```
+Thread t = new Thread();
+```
+
+**2. Runnable**
+
+* `start()` is called.
+* Thread is ready to run or running on CPU.
+* JVM scheduler decides when it actually executes.
+
+```
+t.start();
+```
+
+**3. Blocked**
+
+* Thread is waiting to acquire a monitor lock to enter a synchronized block/method.
+* Occurs due to lock contention.
+
+**4. Waiting**
+
+* Thread waits indefinitely for another thread’s action.
+* Enters this state via:
+
+  * `Object.wait()`
+  * `Thread.join()`
+  * `LockSupport.park()`
+
+**5. Timed Waiting**
+
+* Thread waits for a specified time.
+* Enters this state via:
+
+  * `sleep(time)`
+  * `wait(time)`
+  * `join(time)`
+  * `parkNanos / parkUntil`
+
+**6. Terminated (Dead)**
+
+* Thread finishes execution or exits due to an exception.
+* Cannot be restarted.
+
+State flow (simplified):
+
+```
+NEW → RUNNABLE → (BLOCKED / WAITING / TIMED_WAITING) → RUNNABLE → TERMINATED
+```
+
+Important notes:
+
+* Java does not expose a separate “Running” state; running is part of RUNNABLE.
+* State transitions are managed by the JVM and OS scheduler.
+
+
+
+## Q.105: Difference between run() and start()?
+**`start()`**
+
+* Creates a new thread.
+* Registers the thread with the JVM scheduler.
+* Executes `run()` in a **separate call stack**.
+* A thread can be started only once.
+
+**`run()`**
+
+* Contains the task logic.
+* Calling it directly does **not** create a new thread.
+* Executes in the **current thread’s call stack**, like a normal method call.
+
+Key difference:
+
+* `start()` → multithreading
+* `run()` → single-threaded execution
+
+
+
+## Q.106: What are some different ways of creating thread?
+**1. Extending `Thread` class**
+
+```
+class MyThread extends Thread {
+    public void run() {
+        // task
+    }
+}
+new MyThread().start();
+```
+
+**2. Implementing `Runnable`**
+
+```
+class MyTask implements Runnable {
+    public void run() {
+        // task
+    }
+}
+new Thread(new MyTask()).start();
+```
+
+**3. Using lambda with `Runnable`**
+
+```
+new Thread(() -> {
+    // task
+}).start();
+```
+
+**4. Using `ExecutorService`**
+
+```
+ExecutorService executor = Executors.newFixedThreadPool(2);
+executor.submit(() -> {
+    // task
+});
+executor.shutdown();
+```
+
+**5. Using `Callable` with `Future`**
+
+```
+Callable<Integer> task = () -> 42;
+Future<Integer> f = executor.submit(task);
+```
+
+Preferred approach:
+
+* `ExecutorService` for production code.
+* Avoid extending `Thread`; prefer `Runnable` / `Callable`.
+
+
+
+## Q.107: What are some ways to prevent deadlock?
+Ways to prevent deadlock:
+
+* **Avoid nested locks**
+  Acquire only one lock at a time whenever possible.
+
+* **Lock ordering**
+  Always acquire multiple locks in a fixed global order.
+
+* **Use timeouts**
+  Use `tryLock()` with timeout to avoid waiting indefinitely.
+
+* **Minimize lock scope**
+  Keep synchronized blocks as small as possible.
+
+* **Use higher-level concurrency utilities**
+  Prefer `java.util.concurrent` abstractions over manual synchronization.
+
+* **Avoid unnecessary shared mutable state**
+  Reduce contention by using immutability or thread-local data.
+
+These techniques break at least one of the deadlock conditions (mutual exclusion, hold-and-wait, no preemption, circular wait).
+
+
+
+## Q.108: 
+
+
+## Q.109: 
+
+
+## Q.110: 
+
+
+## Q.111: 
+
+
